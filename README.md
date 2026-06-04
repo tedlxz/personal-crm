@@ -10,21 +10,29 @@ It connects meeting transcripts from VIAIM / iFLYTEK, Feishu Minutes, and calend
 docs/
   execution-plan.md
   prd.md
+  crm-housekeeping-agent.md
   viaim-transcript-automation-validation.md
+  wechat-contact-ingestion.md
 scripts/
   setup_personal_crm_vault.py
 skills/
+  contact-builder.skill
+  crm-housekeeping-agent.skill
   personal-crm-bootstrap.skill
   personal-feishu-minutes-reader.skill
   personal-obsidian-crm-archiver.skill
   personal-outlook-calendar-matcher.skill
   viaim-note-sync.skill
+  wechat-contact-reader.skill
 skills-src/
+  contact-builder/
+  crm-housekeeping-agent/
   personal-crm-bootstrap/
   personal-feishu-minutes-reader/
   personal-obsidian-crm-archiver/
   personal-outlook-calendar-matcher/
   viaim-note-sync/
+  wechat-contact-reader/
 ```
 
 ## Quick Start
@@ -57,6 +65,25 @@ VIAIM Cloud
   -> update contact CRM
 ```
 
+## CRM Housekeeping
+
+The long-running value comes from recurring housekeeping:
+
+```text
+scan unarchived transcripts
+  -> match calendar/contact evidence
+  -> archive high-confidence items
+  -> ask narrow confirmation questions when uncertain
+  -> create contact candidates
+  -> generate reusable insights
+```
+
+Use:
+
+- `crm-housekeeping-agent.skill`
+- `contact-builder.skill`
+- `wechat-contact-reader.skill`
+
 ## Calendar Strategy
 
 The preferred calendar source is whichever Codex/Claude Code can actually read:
@@ -77,5 +104,6 @@ The preferred calendar source is whichever Codex/Claude Code can actually read:
 
 - [Execution Plan](docs/execution-plan.md)
 - [PRD](docs/prd.md)
+- [CRM Housekeeping Agent](docs/crm-housekeeping-agent.md)
 - [VIAIM Automation Validation](docs/viaim-transcript-automation-validation.md)
-
+- [WeChat Contact Ingestion](docs/wechat-contact-ingestion.md)

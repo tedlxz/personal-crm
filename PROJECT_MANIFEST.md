@@ -19,6 +19,9 @@ Package a reusable automation system for personal CRM and recording management:
 | Skill Package | Purpose |
 | --- | --- |
 | `personal-crm-bootstrap.skill` | Create vault folders, templates, and config. |
+| `crm-housekeeping-agent.skill` | Scan inbox, archive transcripts, generate insights, and ask for confirmation when needed. |
+| `contact-builder.skill` | Create or update CRM contact files from transcripts, calendar, email, or WeChat context. |
+| `wechat-contact-reader.skill` | Read local WeChat contact/session exports into contact candidate data. |
 | `viaim-note-sync.skill` | Extract VIAIM transcripts and import VIAIM exports. |
 | `personal-feishu-minutes-reader.skill` | Read Feishu Minutes through personal OAuth where available. |
 | `personal-outlook-calendar-matcher.skill` | Match recordings to Outlook/Gmail/Google Calendar/ICS events. |
@@ -38,4 +41,4 @@ Package a reusable automation system for personal CRM and recording management:
 - Verified VIAIM recording list and transcript tab are DOM-readable.
 - Verified target transcript can be extracted directly from DOM.
 - Verified Python scripts compile.
-
+- Added CRM housekeeping, contact-building, and WeChat contact ingestion design.

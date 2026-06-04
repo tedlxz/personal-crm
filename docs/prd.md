@@ -69,6 +69,39 @@ Claude Code 可运行脚本自动创建目录、模板和配置文件。
 - 每次会议单独建会议文件。
 - 联系人文件和会议文件互相链接。
 
+### F6. CRM Housekeeping
+
+系统需要一个 recurring housekeeping sub-agent，持续处理未归档 transcript。
+
+验收：
+
+- 扫描 inbox 中未归档 transcript。
+- 高置信度自动归档。
+- 低置信度主动询问用户。
+- 缺联系人时触发 contact builder。
+- 每周生成 insight 和待跟进事项。
+
+### F7. Contact Builder
+
+系统能从 transcript、日历、Gmail 邀请和微信联系人导出中生成联系人候选。
+
+验收：
+
+- 能识别联系人姓名、别名、公司、title、来源证据。
+- 新建联系人前可要求用户确认。
+- 不把完整微信聊天记录写入联系人文件。
+
+### F8. WeChat Contact Ingestion
+
+系统可选接入本地微信联系人/会话导出，用于联系人建立和匹配。
+
+验收：
+
+- 默认只读。
+- 不发送微信消息。
+- 不修改微信联系人。
+- 所有微信来源数据默认 `confidential`。
+
 ## 4. 数据结构
 
 ### Contact
@@ -163,3 +196,5 @@ VIAIM audio → ASR → transcript → Obsidian CRM
 | M4 | VIAIM Notes 可自动或半自动同步 |
 | M5 | 飞书妙记读取可用 |
 | M6 | 可选实现 VIAIM 音频自动上传飞书妙记 |
+| M7 | Housekeeping agent 可扫描未归档 transcript 并生成 insights |
+| M8 | WeChat contact ingestion 可辅助建立联系人候选 |
