@@ -1,0 +1,34 @@
+# Local vaults and user data
+ObsidianVault/
+vault/
+*.mp3
+*.m4a
+*.wav
+*.aac
+*.flac
+*.ogg
+*.webm
+
+# Transcripts and generated CRM data may be sensitive
+00_Inbox/
+10_CRM/
+20_Meetings/
+30_Insights/
+40_Projects/
+90_Attachments/
+.crm-system/
+
+# Secrets
+.env
+*.token
+*_token.json
+*credentials*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# macOS
+.DS_Store
+
