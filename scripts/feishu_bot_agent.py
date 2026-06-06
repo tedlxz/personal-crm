@@ -518,10 +518,14 @@ def run_websocket_agent():
     def on_message_read(data) -> None:
         return None
 
+    def on_bot_p2p_chat_entered(data) -> None:
+        return None
+
     handler = (
         lark.EventDispatcherHandler.builder(encrypt_key, verification_token, lark.LogLevel.INFO)
         .register_p2_im_message_receive_v1(on_message)
         .register_p2_im_message_message_read_v1(on_message_read)
+        .register_p2_im_chat_access_event_bot_p2p_chat_entered_v1(on_bot_p2p_chat_entered)
         .register_p2_card_action_trigger(on_card_action)
         .build()
     )
