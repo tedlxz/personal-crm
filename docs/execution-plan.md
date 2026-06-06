@@ -60,6 +60,8 @@ Claude Code 匹配会议和联系人
 自动写入 Obsidian 联系人 CRM、会议纪要、公司档案、待办和洞察
 ```
 
+每天的 housekeeping agent 会扫描当天飞书妙记和 VIAIM transcript；高置信度自动归档，低置信度通过飞书或 `.crm-system/pending-confirmations.md` 向用户确认。联系人匹配和合并必须走保守置信度规则，避免误归档。
+
 关键判断：
 
 - 不再依赖人手动建目录和复制模板，初始化由脚本完成。
@@ -179,9 +181,13 @@ python setup_personal_crm_vault.py --vault "<vault_path>"
 总结要求：
 
 - 用 bullet 形式，按主题分组。
+- interview / expert call 优先用 Q&A 或主题化结构，而不是机械按 transcript 顺序复述。
 - 尽量保留准确的人名、公司名、title、产品名、金额、百分比、日期、时间、数量、估值倍数、承诺和截止时间。
 - 区分事实、观点、风险、决策和行动项。
 - 重要观点在能判断时标注说话人。
+- 对专家、管理层、交易讨论类会议，补充 `Source Quality: S/A/B/Unknown`、信息源背景、潜在立场/偏见。
+- 对投资判断有影响的信息，补充 `Confirmed / Contradicted / New information / Needs follow-up`。
+- 对 AI infra、半导体、光通信、数据中心等技术术语，只在影响理解时做简洁解释，并说明产业链位置和投资含义。
 - 全文 transcript 保存在 `90_Attachments/Transcripts`；会议 note 只保留高价值摘录和整理后的详细 notes。
 - 每条会议 note 必须归档到对应联系人文件：新建/更新 `10_CRM/Contacts/人物.md`，在 `对话记录更新` 中追加会议链接。
 - 只有联系人文件完成更新后，meeting note 才能标记 `crm_updated: true`。
@@ -205,6 +211,7 @@ http://localhost:9876/callback
 3. 进入「权限管理」，申请并发布以下权限：
 
 ```text
+offline_access
 minutes:minutes.search:read
 minutes:minutes:readonly
 minutes:minutes.transcript:export
@@ -218,6 +225,8 @@ calendar:calendar:readonly
 对应中文权限包括：搜索妙记、查看妙记、导出妙记转写文字、获取用户基本信息、查看云空间文件、文档读取/管理、搜索云文档、查看日历。
 
 注意：即使是个人使用，飞书开放平台应用也挂在一个租户/组织下。权限变更通常需要发布新版本并通过管理员审核；如果当前账号就是该空间管理员，可在管理后台自行审核。
+
+`offline_access` 用于 daily housekeeping 的 token refresh。添加该 scope 后必须重新发布应用并重新 OAuth，否则旧 token 不会自动拥有 refresh 权限。
 
 #### 4.2.2 本地配置
 

@@ -57,9 +57,13 @@ Before writing a meeting note, summarize the raw transcript with `70_Prompts/tra
 The output must:
 
 - use Markdown bullets grouped by topic;
+- preserve interview/source background and rate source quality when the call is an expert, management, or deal discussion;
+- use Q&A format for interview-like calls and topic sections for broader discussions;
 - preserve accurate names, companies, titles, products, amounts, percentages, dates, time ranges, quantities, valuation multiples, risks, and promised next steps;
 - distinguish facts, speaker opinions, decisions, risks, and action items;
 - attribute important points to speakers when the transcript makes this clear;
+- include cross-verification, contradictions, new information, and follow-up questions when relevant;
+- explain technical terms briefly in investment context when they matter for understanding the note;
 - keep high-value original wording only as short excerpts;
 - keep the full transcript in `90_Attachments/Transcripts` or as a source link;
 - avoid generic summaries such as "discussed cooperation" without concrete details.

@@ -90,6 +90,8 @@ Claude Code 可运行脚本自动创建目录、模板和配置文件。
 - 低置信度主动询问用户。
 - 缺联系人时触发 contact builder。
 - 每周生成 insight 和待跟进事项。
+- 支持 Codex Desktop recurring automation 或 macOS `launchd`。
+- 运行结果写入 `.crm-system/run-log.md`。
 
 ### F7. Contact Builder
 
@@ -100,6 +102,8 @@ Claude Code 可运行脚本自动创建目录、模板和配置文件。
 - 能识别联系人姓名、别名、公司、title、来源证据。
 - 新建联系人前可要求用户确认。
 - 不把完整微信聊天记录写入联系人文件。
+- 使用保守置信度机制，避免把 transcript 误归档到错误联系人。
+- 对疑似重复联系人生成 merge proposal，不自动合并。
 
 ### F8. WeChat Contact Ingestion
 
@@ -111,6 +115,17 @@ Claude Code 可运行脚本自动创建目录、模板和配置文件。
 - 不发送微信消息。
 - 不修改微信联系人。
 - 所有微信来源数据默认 `confidential`。
+
+### F9. Feishu Token Refresh
+
+系统能在 daily housekeeping 中自动刷新飞书 user token。
+
+验收：
+
+- OAuth scope 包含 `offline_access`。
+- token cache 保存 `refresh_token`。
+- access token 过期或即将过期时自动刷新。
+- refresh 失败时明确要求重新 OAuth，不静默跳过飞书妙记。
 
 ## 4. 数据结构
 

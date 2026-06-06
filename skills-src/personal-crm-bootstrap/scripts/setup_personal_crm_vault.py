@@ -129,6 +129,13 @@ tags: [meeting]
 
 - 
 
+## Interviewee / Source Background
+
+- 受访者/信息源身份：
+- 信息源价值：
+- Source Quality：S / A / B / Unknown
+- Source bias / interest position：management / supplier / customer / competitor / investor / broker / unknown
+
 ## 详细会议纪要
 
 > 由 Codex / Claude 根据 transcript 整理；尽量保留准确数据、金额、时间、比例、产品名、人名、公司名和承诺事项。不要只写泛泛总结。
@@ -148,6 +155,11 @@ tags: [meeting]
 ### 4. 各方观点与判断
 
 - 
+
+### 5. Q&A / 主题化详细内容
+
+- Q：
+- A：
 
 ## 对方表达的需求/关切
 
@@ -175,6 +187,21 @@ tags: [meeting]
 - 需要新增/更新的信息：
 
 ## 可沉淀为 insight 的内容
+
+- 
+
+## Cross-Verification
+
+- Confirmed：
+- Contradicted：
+- New information：
+- Needs follow-up：
+
+## Follow-Up Questions
+
+- 
+
+## Annotations & Discrepancies
 
 - 
 
@@ -299,9 +326,58 @@ TRANSCRIPT_TO_NOTES_PROMPT = """# Transcript to Detailed Meeting Notes Prompt
 
 Use this prompt whenever a Feishu Minutes, VIAIM, iFlytek, or manually pasted transcript is archived into CRM.
 
-## Goal
+## Goal And Quality Bar
 
 Turn the raw transcript into a detailed Markdown meeting note, not a shallow summary. Preserve concrete information that will matter later: people, companies, titles, products, numbers, dates, amounts, valuation multiples, deadlines, ownership, constraints, risks, promises, and next steps.
+
+The note is a research record. Lost detail means lost value. Prefer a longer, complete note over a short summary.
+
+## Core Principles
+
+### 1. Anchor the timeline
+
+- Establish the call date before writing.
+- Convert relative dates into absolute dates when possible.
+- If timing is unclear, preserve the original wording and add `[exact timing unclear from transcript]`.
+
+### 2. Preserve completeness
+
+- Include every substantive topic, data point, rationale, caveat, and follow-up.
+- Keep background context and why a question was asked.
+- Omit only filler and social pleasantries that carry no substance.
+
+### 3. Preserve speaker nuance and uncertainty
+
+- Keep uncertainty such as "I think", "not sure", "maybe", and "needs verification".
+- If the speaker deflects, hesitates, or gives an incomplete answer, note it neutrally in brackets.
+- Do not turn a tentative view into a confident conclusion.
+
+### 4. Correct transcript errors carefully
+
+- Fix obvious ASR errors silently when the correction is certain.
+- For uncertain corrections, write `[transcript says X, likely Y]`.
+- Flag questionable names, figures, tickers, project codes, and dates for user confirmation.
+
+### 5. Present data clearly
+
+- Use tables when 3+ comparable data points appear.
+- Always keep units and periods with numbers.
+- Mark quantitative claims with source confidence when possible.
+
+### 6. PE research intelligence layer
+
+- If the call is an expert / management / deal discussion, add:
+  - interviewee or source background, if known;
+  - source quality rating `S/A/B/Unknown` with rationale;
+  - source bias / interest position, such as management, supplier, customer, competitor, investor, broker, or unknown;
+  - cross-verification: `Confirmed`, `Contradicted`, `New information`, `Needs follow-up`;
+  - follow-up questions that need another source.
+
+### 7. Terminology layer
+
+- For technical terms in AI infra, optical communications, semiconductors, data centers, or similar domains, explain them only when needed for understanding.
+- Explain terms in investment context: value-chain position, why it matters, who benefits, who is threatened, and related confusing concepts.
+- Keep term explanations concise and integrated into the note, not as generic encyclopedia entries.
 
 ## Output File
 
@@ -328,6 +404,8 @@ Required style:
 - Keep exact data where available.
 - Attribute important opinions or commitments to speakers when clear.
 - Separate facts, views, risks, decisions, and follow-ups.
+- For expert calls, organize detailed content by topic, not necessarily transcript order.
+- Use Q&A format when the call is interview-like: `Q:` for the question/prompt and `A:` for the detailed response.
 - Do not invent missing data.
 - If a contact/company cannot be identified confidently, mark it as `needs_user_confirmation`.
 - Keep full transcript in `90_Attachments/Transcripts` or source link; meeting note should contain high-value excerpts only.
@@ -342,6 +420,24 @@ After creating the meeting note:
 4. Update company files under `10_CRM/Companies` when company-level facts appear.
 5. Add follow-ups as Markdown task checkboxes.
 6. Add durable insights only when useful beyond this meeting.
+
+## Knowledge Base Update
+
+For durable research findings, create or update an insight entry using:
+
+```text
+Entry ID: [Industry]-[YYMMDD]-[Sequence]
+Topic:
+Source Quality:
+Date:
+Core View:
+Supporting Data/Evidence:
+Change from Prior Understanding:
+Information Source:
+Durability: structural / cyclical / time-sensitive
+```
+
+Keep global industry knowledge separate from deal-specific information.
 """
 
 
@@ -374,6 +470,8 @@ def main():
         "90_Attachments/Audio",
         "90_Attachments/Transcripts",
         ".crm-system",
+        ".crm-system/merge-proposals",
+        ".crm-system/wechat",
     ]
     for rel in dirs:
         (vault / rel).mkdir(parents=True, exist_ok=True)
@@ -405,6 +503,8 @@ def main():
 
     run_log = vault / ".crm-system/run-log.md"
     write_if_missing(run_log, "# CRM System Run Log\n\n")
+    write_if_missing(vault / ".crm-system/pending-confirmations.md", "# Pending Confirmations\n\n")
+    write_if_missing(vault / ".crm-system/confirmation-log.md", "# Confirmation Log\n\n")
 
     print(json.dumps({
         "ok": True,

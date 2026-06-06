@@ -33,12 +33,22 @@ If the person cannot be reliably identified, ask the user.
 ## Contact Creation Workflow
 
 1. Normalize name and aliases.
-2. Search existing contact files for duplicates.
+2. Search existing contact files for duplicates. Use `scripts/contact_matcher.py` when available.
 3. Search company files for the company.
 4. Infer background fields from evidence.
 5. Set `sensitivity: confidential` unless clearly external/public.
 6. Create contact file from `80_Templates/crm-contact-template.md`.
 7. Link the source meeting and any relevant company.
+
+## Matching And Dedupe Rules
+
+Use `docs/contact-matching-and-dedupe.md` as the source of truth.
+
+- Create automatically only with at least two strong identifiers, such as full name + company, full name + calendar email, or phone number + meeting context.
+- Treat fuzzy Chinese name matches as weak evidence unless calendar/company/WeChat alias supports them.
+- If two candidates are within 10 score points, ask before writing CRM.
+- Never auto-merge existing contacts.
+- Write merge proposals to `.crm-system/merge-proposals/` and wait for user confirmation.
 
 ## WeChat Data Handling
 
@@ -72,4 +82,3 @@ Report:
 - aliases added;
 - evidence used;
 - uncertainty remaining.
-

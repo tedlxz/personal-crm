@@ -11,7 +11,7 @@ Use this skill before writing a meeting to CRM whenever calendar context is avai
 
 Prefer:
 
-1. Outlook Calendar connector or MCP.
+1. Outlook Calendar connector or MCP when the Codex/Claude environment exposes it.
 2. Microsoft Graph OAuth with a supported work/school account.
 3. Gmail connector: search/read meeting invitations and `.ics` attachments forwarded from Outlook or created through Gmail/Google Calendar.
 4. Google Calendar source when available.
@@ -56,6 +56,12 @@ Confidence:
 - `low`: score < 45
 
 If confidence is low or two candidates are close, ask the user to confirm before updating CRM.
+
+## Matching To CRM Contacts
+
+After selecting candidate calendar events, pass attendee/title/company evidence into `scripts/contact_matcher.py` when available.
+
+Do not treat a fuzzy name alone as enough for CRM update. Calendar attendee, company, email, phone, or WeChat alias support is required for auto-archive.
 
 ## Output
 

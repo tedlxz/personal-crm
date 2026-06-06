@@ -21,6 +21,7 @@ Configure the Feishu custom app before OAuth:
 ```text
 Redirect URL: http://localhost:9876/callback
 Required scopes:
+  offline_access
   minutes:minutes.search:read
   minutes:minutes:readonly
   minutes:minutes.transcript:export
@@ -32,6 +33,8 @@ Required scopes:
 ```
 
 Feishu permission changes require publishing the app version and may require tenant admin approval, even for a personal workflow. If scopes are added after a token was issued, run OAuth again and exchange a fresh code.
+
+`offline_access` is required for unattended daily housekeeping. After adding it, publish the app again and rerun OAuth so the cached token includes a refresh token.
 
 Check auth:
 
@@ -52,6 +55,14 @@ python3 <skill_path>/scripts/feishu_minutes_reader.py --action exchange_code --a
 ```
 
 The redirect target may fail to load because no local web server is running. Copy the `code` value from the browser address bar and exchange it immediately. The code is short-lived and single-use.
+
+Refresh token manually:
+
+```bash
+python3 <skill_path>/scripts/feishu_minutes_reader.py --action refresh_token
+```
+
+The script also auto-refreshes when `search_minutes` or `read_minute_transcript` needs a fresh token. If refresh fails, regenerate the OAuth URL and exchange a new code.
 
 ## Search Minutes
 

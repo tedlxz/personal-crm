@@ -13,6 +13,7 @@ FEISHU_BASE = "https://open.feishu.cn/open-apis"
 LARK_BASE = "https://open.larksuite.com/open-apis"
 REDIRECT_URI = "http://localhost:9876/callback"
 TOKEN_PATH = os.path.expanduser("~/.personal_feishu_user_token.json")
+TOKEN_REFRESH_SKEW_SECONDS = 300
 
 
 def load_local_env():
@@ -33,6 +34,7 @@ APP_ID = os.environ.get("FEISHU_APP_ID", "")
 APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "")
 
 OAUTH_SCOPES = " ".join([
+    "offline_access",
     "minutes:minutes.search:read",
     "minutes:minutes:readonly",
     "minutes:minutes.transcript:export",
@@ -102,12 +104,14 @@ def get_app_access_token(base):
     return data["app_access_token"]
 
 
-def load_token():
+def load_token(valid_only=True):
     if not os.path.exists(TOKEN_PATH):
         return None
     with open(TOKEN_PATH) as f:
         cached = json.load(f)
-    if cached.get("expire_time", 0) > time.time() + 300:
+    if not valid_only:
+        return cached
+    if cached.get("expire_time", 0) > time.time() + TOKEN_REFRESH_SKEW_SECONDS:
         return cached
     return None
 
@@ -117,9 +121,15 @@ def save_token(data):
         "user_access_token": data.get("access_token"),
         "refresh_token": data.get("refresh_token"),
         "expire_time": time.time() + data.get("expires_in", 7200),
+        "refresh_expire_time": time.time() + data.get(
+            "refresh_token_expires_in",
+            data.get("refresh_expires_in", 0),
+        ) if data.get("refresh_token") else 0,
         "open_id": data.get("open_id", ""),
         "user_id": data.get("user_id", ""),
         "name": data.get("name", ""),
+        "scope": data.get("scope", ""),
+        "token_type": data.get("token_type", "Bearer"),
     }
     with open(TOKEN_PATH, "w") as f:
         json.dump(cached, f, ensure_ascii=False, indent=2)
@@ -127,11 +137,17 @@ def save_token(data):
 
 
 def auth_status():
-    cached = load_token()
+    cached_any = load_token(valid_only=False)
+    cached = load_token(valid_only=True)
     out({
         "authenticated": bool(cached),
         "token_path": TOKEN_PATH,
-        "user": cached.get("name", "") if cached else "",
+        "has_token_cache": bool(cached_any),
+        "has_refresh_token": bool(cached_any and cached_any.get("refresh_token")),
+        "access_token_expires_in_seconds": int(cached_any.get("expire_time", 0) - time.time()) if cached_any else None,
+        "refresh_token_expires_in_seconds": int(cached_any.get("refresh_expire_time", 0) - time.time()) if cached_any and cached_any.get("refresh_expire_time") else None,
+        "scope": cached_any.get("scope", "") if cached_any else "",
+        "user": cached_any.get("name", "") if cached_any else "",
     })
 
 
@@ -149,21 +165,52 @@ def oauth_url(base):
 
 
 def exchange_code(base, code):
-    app_token = get_app_access_token(base)
-    data = request_json("POST", f"{base}/authen/v1/oidc/access_token", headers={
-        "Authorization": f"Bearer {app_token}",
-    }, payload={
+    require_creds()
+    data = request_json("POST", f"{base}/authen/v2/oauth/token", payload={
         "grant_type": "authorization_code",
+        "client_id": APP_ID,
+        "client_secret": APP_SECRET,
         "code": code,
+        "redirect_uri": REDIRECT_URI,
     })
     if data.get("code") != 0:
         die("exchange_code_error", "Failed to exchange OAuth code.", data)
-    cached = save_token(data.get("data", {}))
+    cached = save_token(data)
     out({"authenticated": True, "token_path": TOKEN_PATH, "user": cached.get("name", "")})
+
+
+def refresh_user_token(base):
+    require_creds()
+    cached = load_token(valid_only=False)
+    if not cached or not cached.get("refresh_token"):
+        die("missing_refresh_token", "No refresh_token cached. Add offline_access, publish app, and rerun OAuth.")
+    if cached.get("refresh_expire_time", 0) and cached["refresh_expire_time"] <= time.time() + TOKEN_REFRESH_SKEW_SECONDS:
+        die("refresh_token_expired", "Refresh token is expired or nearly expired. Rerun OAuth.")
+    data = request_json("POST", f"{base}/authen/v2/oauth/token", payload={
+        "grant_type": "refresh_token",
+        "client_id": APP_ID,
+        "client_secret": APP_SECRET,
+        "refresh_token": cached["refresh_token"],
+    })
+    if data.get("code") != 0:
+        die("refresh_token_error", "Failed to refresh user_access_token. Rerun OAuth if refresh_token was already used or expired.", data)
+    refreshed = save_token(data)
+    out({
+        "authenticated": True,
+        "refreshed": True,
+        "token_path": TOKEN_PATH,
+        "access_token_expires_in_seconds": int(refreshed.get("expire_time", 0) - time.time()),
+        "refresh_token_expires_in_seconds": int(refreshed.get("refresh_expire_time", 0) - time.time()) if refreshed.get("refresh_expire_time") else None,
+    })
 
 
 def require_user_token():
     cached = load_token()
+    if not cached:
+        cached_any = load_token(valid_only=False)
+        if cached_any and cached_any.get("refresh_token"):
+            refresh_user_token(FEISHU_BASE)
+            cached = load_token()
     if not cached:
         die("not_authenticated", "Run oauth_url and exchange_code first.")
     return cached["user_access_token"]
@@ -241,6 +288,7 @@ def main():
         "auth_status",
         "oauth_url",
         "exchange_code",
+        "refresh_token",
         "search_minutes",
         "read_minute_transcript",
     ])
@@ -262,6 +310,8 @@ def main():
         if not args.auth_code:
             die("missing_param", "--auth-code is required.")
         exchange_code(base, args.auth_code)
+    elif args.action == "refresh_token":
+        refresh_user_token(base)
     elif args.action == "search_minutes":
         search_minutes(base, args.query, args.page_size, args.page_token, args.start, args.end)
     elif args.action == "read_minute_transcript":

@@ -11,9 +11,13 @@ docs/
   execution-plan.md
   prd.md
   crm-housekeeping-agent.md
+  contact-matching-and-dedupe.md
+  daily-housekeeping-bot.md
   viaim-transcript-automation-validation.md
   wechat-contact-ingestion.md
 scripts/
+  contact_matcher.py
+  install_housekeeping_launchd.py
   setup_personal_crm_vault.py
 skills/
   contact-builder.skill
@@ -100,6 +104,17 @@ Use:
 - `crm-housekeeping-agent.skill`
 - `contact-builder.skill`
 - `wechat-contact-reader.skill`
+- [Daily Housekeeping Bot](docs/daily-housekeeping-bot.md)
+- [Contact Matching And Dedupe](docs/contact-matching-and-dedupe.md)
+
+For a local daily schedule:
+
+```bash
+python3 scripts/install_housekeeping_launchd.py \
+  --vault "/Users/tedliu/Documents/Obsidian/Personal CRM" \
+  --repo "/Users/tedliu/Documents/Codex/2026-06-03/files-mentioned-by-the-user-june/outputs/Personal-CRM" \
+  --time "20:30"
+```
 
 ## Calendar Strategy
 
@@ -122,5 +137,7 @@ The preferred calendar source is whichever Codex/Claude Code can actually read:
 - [Execution Plan](docs/execution-plan.md)
 - [PRD](docs/prd.md)
 - [CRM Housekeeping Agent](docs/crm-housekeeping-agent.md)
+- [Daily Housekeeping Bot](docs/daily-housekeeping-bot.md)
+- [Contact Matching And Dedupe](docs/contact-matching-and-dedupe.md)
 - [VIAIM Automation Validation](docs/viaim-transcript-automation-validation.md)
 - [WeChat Contact Ingestion](docs/wechat-contact-ingestion.md)
