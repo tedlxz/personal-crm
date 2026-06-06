@@ -115,6 +115,7 @@ python setup_personal_crm_vault.py --vault "/absolute/path/to/ObsidianVault"
 30_Insights/
   Weekly/
 40_Projects/
+70_Prompts/
 80_Templates/
 90_Attachments/
   Audio/
@@ -131,6 +132,8 @@ python setup_personal_crm_vault.py --vault "/absolute/path/to/ObsidianVault"
 80_Templates/meeting-note-template.md
 80_Templates/company-template.md
 80_Templates/weekly-review-template.md
+70_Prompts/transcript-to-detailed-notes.md
+00_Index.md
 ```
 
 ## 4. 操作 Manual
@@ -148,6 +151,39 @@ python setup_personal_crm_vault.py --vault "/absolute/path/to/ObsidianVault"
 ```bash
 python setup_personal_crm_vault.py --vault "<vault_path>"
 ```
+
+如果用户未指定路径，默认使用：
+
+```text
+~/Documents/Obsidian/Personal CRM
+```
+
+初始化完成后，用户只需要在 Obsidian 中选择 `Open folder as vault`，打开该文件夹即可。
+
+#### 4.1.1 Transcript 归档质量标准
+
+所有来自飞书妙记、VIAIM、讯飞听见或手动粘贴的 transcript，都必须先由 Codex / Claude 总结成详尽 Markdown notes，再写入 CRM。不能把 transcript 原文直接塞进联系人文件，也不能只生成几句浅摘要。
+
+统一命名：
+
+```text
+20_Meetings/YYYY/YYYY-MM-DD_HHMM_主要人物_主题.md
+```
+
+标题格式：
+
+```text
+# YYYY-MM-DD HH:MM 主要人物 - 主题
+```
+
+总结要求：
+
+- 用 bullet 形式，按主题分组。
+- 尽量保留准确的人名、公司名、title、产品名、金额、百分比、日期、时间、数量、估值倍数、承诺和截止时间。
+- 区分事实、观点、风险、决策和行动项。
+- 重要观点在能判断时标注说话人。
+- 全文 transcript 保存在 `90_Attachments/Transcripts`；会议 note 只保留高价值摘录和整理后的详细 notes。
+- 如果无法确认人物或公司，标记 `needs_user_confirmation`，并在更新联系人前询问用户。
 
 ### 4.2 飞书妙记接入
 

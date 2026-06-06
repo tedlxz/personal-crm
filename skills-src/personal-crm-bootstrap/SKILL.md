@@ -9,7 +9,11 @@ Use this skill before any archiving work.
 
 ## Required input
 
-The user must provide an absolute Obsidian vault path. If absent, ask for it.
+Prefer an absolute Obsidian vault path from the user. If absent, use:
+
+```text
+~/Documents/Obsidian/Personal CRM
+```
 
 ## Action
 
@@ -31,11 +35,12 @@ Confirm these exist:
 - `10_CRM/Companies`
 - `20_Meetings`
 - `30_Insights/Weekly`
+- `70_Prompts/transcript-to-detailed-notes.md`
 - `80_Templates/crm-contact-template.md`
 - `80_Templates/meeting-note-template.md`
+- `00_Index.md`
 - `.crm-system/config.json`
 
 ## Response
 
 Report the vault path and the initialized folders.
-

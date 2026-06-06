@@ -49,6 +49,27 @@ Use exactly one:
 8. Generate reusable insights only when content is useful beyond this meeting.
 9. Append results to `.crm-system/run-log.md`.
 
+## Meeting Note Quality Bar
+
+Every archived transcript must become a detailed Markdown note before it is marked `archived`.
+
+Use:
+
+```text
+70_Prompts/transcript-to-detailed-notes.md
+80_Templates/meeting-note-template.md
+```
+
+Required note shape:
+
+- filename: `20_Meetings/YYYY/YYYY-MM-DD_HHMM_主要人物_主题.md`;
+- title: `YYYY-MM-DD HH:MM 主要人物 - 主题`;
+- bullet-heavy sections;
+- accurate data retained, including amounts, percentages, dates, quantities, product names, company names, titles, and commitments;
+- action items written as Markdown checkboxes;
+- full transcript moved or linked under `90_Attachments/Transcripts`;
+- contact files updated only with stable facts and interaction rows, not full transcript text.
+
 ## Confidence Rules
 
 High confidence:
@@ -76,4 +97,3 @@ Report:
 - follow-ups found;
 - questions for the user;
 - blocked items.
-

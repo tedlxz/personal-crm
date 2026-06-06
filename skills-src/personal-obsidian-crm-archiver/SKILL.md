@@ -16,6 +16,7 @@ Use this skill as the final write layer.
 - Do not paste full transcript into a contact file.
 - Use Obsidian wiki links.
 - Preserve user-written content.
+- Always turn transcripts into detailed model-written Markdown notes before CRM updates. Do not write shallow summaries.
 
 ## Vault structure
 
@@ -49,15 +50,36 @@ If unclear, use `confidential`.
 8. Update company file if needed.
 9. Move processed transcript/audio to `90_Attachments`.
 
+## Transcript Summarization Standard
+
+Before writing a meeting note, summarize the raw transcript with `70_Prompts/transcript-to-detailed-notes.md`.
+
+The output must:
+
+- use Markdown bullets grouped by topic;
+- preserve accurate names, companies, titles, products, amounts, percentages, dates, time ranges, quantities, valuation multiples, risks, and promised next steps;
+- distinguish facts, speaker opinions, decisions, risks, and action items;
+- attribute important points to speakers when the transcript makes this clear;
+- keep high-value original wording only as short excerpts;
+- keep the full transcript in `90_Attachments/Transcripts` or as a source link;
+- avoid generic summaries such as "discussed cooperation" without concrete details.
+
 ## File names
 
 ```text
 10_CRM/Contacts/姓名.md
 10_CRM/Companies/公司名.md
-20_Meetings/YYYY/MM/YYYY-MM-DD_主要联系人_主题.md
+20_Meetings/YYYY/YYYY-MM-DD_HHMM_主要人物_主题.md
 ```
+
+The meeting title must include time, people, and topic:
+
+```text
+# YYYY-MM-DD HH:MM 主要人物 - 主题
+```
+
+If a person or topic cannot be identified confidently, use `Unknown` in the filename and ask the user one concise confirmation question before creating/updating contact files.
 
 ## Completion response
 
 Report created/updated files, follow-up tasks, calendar confidence, and unresolved ambiguities.
-

@@ -92,8 +92,11 @@ tags: [crm]
 MEETING_TEMPLATE = """---
 type: meeting_note
 date: ""
+time: ""
 title: ""
+topic: ""
 participants: []
+primary_people: []
 contacts: []
 companies: []
 source: ""
@@ -102,12 +105,13 @@ audio_file: ""
 transcript_file: ""
 calendar_event_id: ""
 match_confidence: ""
+model_summary: true
 sensitivity: external_ok
 crm_updated: false
 tags: [meeting]
 ---
 
-# {{date}} {{title}}
+# {{date}} {{time}} {{primary_people}} - {{topic}}
 
 ## 会议基本信息
 
@@ -115,6 +119,7 @@ tags: [meeting]
 - 地点/形式：
 - 参与人：
 - 来源：飞书妙记 / VIAIM / 讯飞转写 / 手动记录 / 音频
+- 标题命名：`YYYY-MM-DD_HHMM_主要人物_主题.md`
 - 关联联系人：
 - 关联公司：
 - Outlook 日历匹配：
@@ -122,10 +127,27 @@ tags: [meeting]
 
 ## 一句话摘要
 
+- 
 
-## 关键讨论
+## 详细会议纪要
 
-1. 
+> 由 Codex / Claude 根据 transcript 整理；尽量保留准确数据、金额、时间、比例、产品名、人名、公司名和承诺事项。不要只写泛泛总结。
+
+### 1. 背景与会议目的
+
+- 
+
+### 2. 关键讨论与事实细节
+
+- 
+
+### 3. 数据、价格、时间线和数量
+
+- 
+
+### 4. 各方观点与判断
+
+- 
 
 ## 对方表达的需求/关切
 
@@ -136,6 +158,10 @@ tags: [meeting]
 - 
 
 ## 新增背景信息
+
+- 
+
+## 重要原话/高价值片段
 
 - 
 
@@ -152,9 +178,10 @@ tags: [meeting]
 
 - 
 
-## 原始转写摘录
+## 原始 transcript 位置
 
-> 只保留关键原文片段。全文 transcript 放附件、源链接或 source file。
+- `transcript_file`：
+- `source_link`：
 """
 
 
@@ -231,6 +258,93 @@ tags: [weekly-review]
 """
 
 
+INDEX_NOTE = """# Personal CRM
+
+## Inbox
+
+- [[00_Inbox/Transcripts]]
+- [[00_Inbox/VIAIM/Transcripts]]
+- [[00_Inbox/FeishuLinks]]
+
+## CRM
+
+- [[10_CRM/Contacts]]
+- [[10_CRM/Companies]]
+- [[10_CRM/Networks]]
+
+## Meetings
+
+- [[20_Meetings]]
+
+## Insights
+
+- [[30_Insights/Weekly]]
+
+## System
+
+- [[70_Prompts/transcript-to-detailed-notes]]
+- [[80_Templates/meeting-note-template]]
+- [[80_Templates/crm-contact-template]]
+
+## Operating Rules
+
+- Every transcript must be summarized by Codex / Claude into detailed Markdown notes before CRM updates.
+- Meeting note filenames use `YYYY-MM-DD_HHMM_主要人物_主题.md`.
+- Full transcripts stay in `90_Attachments/Transcripts`; contact files only keep stable facts and interaction rows.
+- If identity or calendar matching is uncertain, mark `needs_user_confirmation` and ask before updating contacts.
+"""
+
+
+TRANSCRIPT_TO_NOTES_PROMPT = """# Transcript to Detailed Meeting Notes Prompt
+
+Use this prompt whenever a Feishu Minutes, VIAIM, iFlytek, or manually pasted transcript is archived into CRM.
+
+## Goal
+
+Turn the raw transcript into a detailed Markdown meeting note, not a shallow summary. Preserve concrete information that will matter later: people, companies, titles, products, numbers, dates, amounts, valuation multiples, deadlines, ownership, constraints, risks, promises, and next steps.
+
+## Output File
+
+Create one meeting file:
+
+```text
+20_Meetings/YYYY/YYYY-MM-DD_HHMM_主要人物_主题.md
+```
+
+Naming rules:
+
+- `YYYY-MM-DD` and `HHMM` come from transcript metadata, source timestamp, or calendar match.
+- `主要人物` should be the main external contact or most important participant. If uncertain, use `Unknown`.
+- `主题` should be a short Chinese or English topic, max 16 characters when possible.
+- Use ASCII hyphens and underscores in the filename; avoid slashes and punctuation that break file paths.
+
+## Required Markdown Structure
+
+Use `80_Templates/meeting-note-template.md`. Fill every section that has evidence. Prefer bullet points.
+
+Required style:
+
+- Detailed bullets, grouped by topic.
+- Keep exact data where available.
+- Attribute important opinions or commitments to speakers when clear.
+- Separate facts, views, risks, decisions, and follow-ups.
+- Do not invent missing data.
+- If a contact/company cannot be identified confidently, mark it as `needs_user_confirmation`.
+- Keep full transcript in `90_Attachments/Transcripts` or source link; meeting note should contain high-value excerpts only.
+
+## CRM Updates
+
+After creating the meeting note:
+
+1. Update existing contact files under `10_CRM/Contacts`.
+2. Create new contact files only when identity is clear or user confirms.
+3. Append one row to each relevant contact's `对话记录更新`.
+4. Update company files under `10_CRM/Companies` when company-level facts appear.
+5. Add follow-ups as Markdown task checkboxes.
+6. Add durable insights only when useful beyond this meeting.
+"""
+
+
 def write_if_missing(path: Path, content: str):
     if not path.exists():
         path.write_text(content, encoding="utf-8")
@@ -255,6 +369,7 @@ def main():
         "20_Meetings",
         "30_Insights/Weekly",
         "40_Projects",
+        "70_Prompts",
         "80_Templates",
         "90_Attachments/Audio",
         "90_Attachments/Transcripts",
@@ -267,6 +382,8 @@ def main():
     write_if_missing(vault / "80_Templates/meeting-note-template.md", MEETING_TEMPLATE)
     write_if_missing(vault / "80_Templates/company-template.md", COMPANY_TEMPLATE)
     write_if_missing(vault / "80_Templates/weekly-review-template.md", WEEKLY_TEMPLATE)
+    write_if_missing(vault / "70_Prompts/transcript-to-detailed-notes.md", TRANSCRIPT_TO_NOTES_PROMPT)
+    write_if_missing(vault / "00_Index.md", INDEX_NOTE)
 
     config_path = vault / ".crm-system/config.json"
     if not config_path.exists():
@@ -299,4 +416,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
