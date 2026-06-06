@@ -135,6 +135,7 @@ Claude Code 可运行脚本自动创建目录、模板和配置文件。
 
 - bot 能给用户发送低置信度归档确认消息。
 - bot 后端能接收 `/archive`、`/new`、`/skip`。
+- bot 能理解低置信度卡片后的自然语言回复，例如 `归到 Alex Chen`、`这个联系人叫 Alex Chen`、`新建 Alex Chen Northstar Advisor`。
 - bot 能搜索 Obsidian vault。
 - bot 可选接入大模型，用检索到的知识库上下文回答 `/ask`。
 - bot 不自动合并联系人；合并必须生成 proposal 并等待确认。

@@ -121,10 +121,10 @@ python3 scripts/install_housekeeping_launchd.py \
 For Feishu bot confirmation and knowledge-base Q&A, run:
 
 ```bash
-python3 scripts/feishu_bot_agent.py --host 127.0.0.1 --port 9788
+python3 scripts/feishu_bot_agent.py --transport websocket
 ```
 
-Then expose `/feishu/events` through a tunnel and configure it in Feishu event subscriptions. See [Feishu Bot Agent](docs/feishu-bot-agent.md).
+Use Feishu long connection for message events and card callbacks. The bot can understand short natural-language replies such as `归到 Alex Chen` or `这个联系人叫 Alex Chen`. See [Feishu Bot Agent](docs/feishu-bot-agent.md).
 
 ## Calendar Strategy
 

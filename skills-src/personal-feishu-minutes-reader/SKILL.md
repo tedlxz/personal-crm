@@ -132,6 +132,16 @@ python3 <skill_path>/scripts/feishu_minutes_reader.py \
 
 The card supports candidate buttons, `手动输入`, and `跳过`. Card callbacks require `card.action.trigger` to be configured on the Feishu app and handled by `scripts/feishu_bot_agent.py`.
 
+When the user clicks `手动输入`, the bot agent should accept natural-language replies and map them to structured confirmations. Examples:
+
+```text
+Alex Chen
+这个联系人叫 Alex Chen
+归到 Alex Chen
+新建 Alex Chen Northstar Advisor
+跳过
+```
+
 ## Fallback
 
 If the API returns permission errors:

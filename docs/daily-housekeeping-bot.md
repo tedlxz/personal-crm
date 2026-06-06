@@ -69,6 +69,16 @@ python3 skills-src/personal-feishu-minutes-reader/scripts/feishu_minutes_reader.
 
 If card sending or card callbacks are unavailable, fall back to a text message with `/archive`, `/new`, and `/skip` commands.
 
+When card callbacks are available, the user does not need to remember commands. After clicking `手动输入`, the bot should accept natural-language replies:
+
+```text
+Alex Chen
+这个联系人叫 Alex Chen
+归到 Alex Chen
+新建 Alex Chen Northstar Advisor
+跳过
+```
+
 If Feishu message sending is not available, write the question to:
 
 ```text
@@ -80,16 +90,10 @@ and report it in the Codex thread.
 The local bot backend is:
 
 ```bash
-python3 scripts/feishu_bot_agent.py --host 127.0.0.1 --port 9788
+python3 scripts/feishu_bot_agent.py --transport websocket
 ```
 
-Use a tunnel such as `ngrok http 9788` and configure Feishu event subscription URL:
-
-```text
-https://<ngrok-domain>/feishu/events
-```
-
-Subscribe to:
+Configure Feishu long connection for:
 
 ```text
 im.message.receive_v1

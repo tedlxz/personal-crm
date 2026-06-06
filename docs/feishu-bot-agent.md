@@ -11,9 +11,32 @@ The bot should:
 - search the local Obsidian CRM vault;
 - answer knowledge-base questions with retrieved context;
 - record user decisions for the next housekeeping run;
+- understand short natural-language replies such as `这个联系人叫 Alex Chen` or `归到 Alex Chen`;
 - avoid updating contacts or merging contacts without explicit confirmation.
 
-## Current Local Backend
+## Role Of Lark CLI / CUI
+
+`lark-cli` is the Feishu API/CUI toolbox. It is useful for:
+
+- sending Feishu messages;
+- reading Feishu resources such as Minutes, calendar, docs, and contacts;
+- consuming regular message events such as `im.message.receive_v1`;
+- debugging permissions and event schemas.
+
+It does not replace the agent brain. The Personal CRM still needs a local agent layer to remember which low-confidence card is being discussed, translate natural language into structured CRM actions, write Obsidian logs, and decide when to call Codex/Claude for deeper work.
+
+In practice:
+
+```text
+Feishu bot UI
+  -> Feishu long connection / lark-cli tools
+  -> local CRM agent router
+  -> Obsidian vault + Codex/Claude + Feishu APIs
+```
+
+## Current Local Agent
+
+Preferred mode is Feishu long connection:
 
 Run:
 
@@ -21,31 +44,22 @@ Run:
 PERSONAL_CRM_VAULT="/Users/tedliu/Documents/Obsidian/Personal CRM" \
 FEISHU_APP_ID="<app_id>" \
 FEISHU_APP_SECRET="<app_secret>" \
+python3 scripts/feishu_bot_agent.py --transport websocket
+```
+
+The process must remain running while the bot is expected to answer messages or card clicks.
+
+HTTP webhook mode is kept as a fallback for deployments with a stable HTTPS callback URL:
+
+```bash
 python3 scripts/feishu_bot_agent.py --host 127.0.0.1 --port 9788
 ```
 
-Health check:
-
-```bash
-curl http://127.0.0.1:9788/health
-```
-
-Feishu event path:
+In long-connection mode, do not configure a tunnel URL. Configure Feishu:
 
 ```text
-/feishu/events
-```
-
-Because Feishu cannot call `127.0.0.1`, expose it with a tunnel for real message receiving:
-
-```bash
-ngrok http 9788
-```
-
-Then configure Feishu event subscription URL:
-
-```text
-https://<ngrok-domain>/feishu/events
+事件与回调 -> 事件配置 -> 使用长连接接收事件
+事件与回调 -> 回调配置 -> 使用长连接接收回调
 ```
 
 ## Feishu App Requirements
@@ -59,13 +73,46 @@ Enable:
 - send message permission: `im:message:send_as_bot`;
 - app credentials in local `.env` or environment variables.
 
-If Feishu provides a verification token, set:
+For long connection, both message events and card callbacks must use long connection.
 
-```text
-FEISHU_VERIFICATION_TOKEN=<token>
+`lark-cli` can verify message event consumption:
+
+```bash
+lark-cli event status --json
+lark-cli event schema im.message.receive_v1 --json
 ```
 
+Card button callbacks may not appear in `lark-cli event list`; the Python agent uses the Feishu SDK callback handler for `card.action.trigger`.
+
+## Natural Language Replies
+
+The bot keeps short-term state in:
+
+```text
+.crm-system/bot-session-state.json
+```
+
+When the user clicks `手动输入` on a card, the agent records which recording is awaiting confirmation. The next reply can be plain language:
+
+```text
+Alex Chen
+这个联系人叫 Alex Chen
+归到 Alex Chen
+新建 Alex Chen Northstar Advisor
+跳过
+```
+
+The agent writes the structured result to:
+
+```text
+.crm-system/confirmation-log.md
+```
+
+The next housekeeping run applies that confirmation to the Obsidian CRM.
+
 ## Commands
+
+Commands are still supported for precision and debugging:
 
 ```text
 /pending
@@ -96,7 +143,7 @@ python3 skills-src/personal-feishu-minutes-reader/scripts/feishu_minutes_reader.
 Card buttons:
 
 - candidate button: records `/archive <name>`;
-- `手动输入`: asks the user to reply `/archive 联系人姓名` or `/new 姓名 公司 Title`;
+- `手动输入`: asks the user to reply naturally, for example `Alex Chen` or `这个联系人叫 Alex Chen`;
 - `跳过`: records `/skip`.
 
 ## LLM Layer
@@ -120,7 +167,7 @@ If no model key is configured, `/ask` safely falls back to local knowledge-base 
 housekeeping finds uncertain transcript
   -> write pending-confirmations.md
   -> send Feishu message
-  -> user replies /archive, /new, or /skip
+  -> user clicks a candidate or replies naturally
   -> bot records confirmation-log.md
   -> next housekeeping applies the decision
 ```
