@@ -69,13 +69,14 @@ Claude Code 可运行脚本自动创建目录、模板和配置文件。
 验收：
 
 - transcript 必须先由 Codex / Claude 总结成详尽 Markdown meeting note。
-- meeting note 文件名统一为 `YYYY-MM-DD_HHMM_主要人物_主题.md`。
-- meeting note 标题统一为 `YYYY-MM-DD HH:MM 主要人物 - 主题`。
+- meeting note 文件名统一为 `YYYY-MM-DD_主要人物_主题.md`。
+- meeting note 标题统一为 `YYYY-MM-DD_主要人物_主题`。
 - meeting note 使用 bullet 形式并保留准确数据、细节、观点归属、风险和行动项。
 - 新联系人自动创建。
 - 老联系人追加互动记录。
 - 每次会议单独建会议文件。
 - 联系人文件和会议文件互相链接。
+- 只有在相关联系人文件已创建/更新后，meeting note 才能标记 `crm_updated: true`。
 - 原始 transcript 不完整写入联系人文件，全文保存在 `90_Attachments/Transcripts`。
 
 ### F6. CRM Housekeeping

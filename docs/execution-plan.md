@@ -167,13 +167,13 @@ python setup_personal_crm_vault.py --vault "<vault_path>"
 统一命名：
 
 ```text
-20_Meetings/YYYY/YYYY-MM-DD_HHMM_主要人物_主题.md
+20_Meetings/YYYY/YYYY-MM-DD_主要人物_主题.md
 ```
 
 标题格式：
 
 ```text
-# YYYY-MM-DD HH:MM 主要人物 - 主题
+# YYYY-MM-DD_主要人物_主题
 ```
 
 总结要求：
@@ -183,7 +183,9 @@ python setup_personal_crm_vault.py --vault "<vault_path>"
 - 区分事实、观点、风险、决策和行动项。
 - 重要观点在能判断时标注说话人。
 - 全文 transcript 保存在 `90_Attachments/Transcripts`；会议 note 只保留高价值摘录和整理后的详细 notes。
-- 如果无法确认人物或公司，标记 `needs_user_confirmation`，并在更新联系人前询问用户。
+- 每条会议 note 必须归档到对应联系人文件：新建/更新 `10_CRM/Contacts/人物.md`，在 `对话记录更新` 中追加会议链接。
+- 只有联系人文件完成更新后，meeting note 才能标记 `crm_updated: true`。
+- 如果无法确认人物或公司，标记 `needs_user_confirmation`；主联系人可先建候选联系人文件，额外联系人需询问用户后再建。
 
 ### 4.2 飞书妙记接入
 

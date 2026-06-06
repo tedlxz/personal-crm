@@ -69,16 +69,28 @@ The output must:
 ```text
 10_CRM/Contacts/姓名.md
 10_CRM/Companies/公司名.md
-20_Meetings/YYYY/YYYY-MM-DD_HHMM_主要人物_主题.md
+20_Meetings/YYYY/YYYY-MM-DD_主要人物_主题.md
 ```
 
-The meeting title must include time, people, and topic:
+The meeting title must use date, people, and topic:
 
 ```text
-# YYYY-MM-DD HH:MM 主要人物 - 主题
+# YYYY-MM-DD_主要人物_主题
 ```
 
+Keep precise time in frontmatter (`time`) and `会议基本信息`, not in the filename.
+
 If a person or topic cannot be identified confidently, use `Unknown` in the filename and ask the user one concise confirmation question before creating/updating contact files.
+
+## Contact Archiving
+
+Every meeting note must be archived to the relevant person files:
+
+- create or update `10_CRM/Contacts/人物.md`;
+- add wiki links from meeting frontmatter `contacts` to the contact files;
+- append one row under each contact's `对话记录更新`;
+- do not mark `crm_updated: true` until the relevant contact rows are written;
+- if the speaker identity is uncertain, create a `needs-confirmation` contact only for the primary named person and ask before creating extra contacts.
 
 ## Completion response
 

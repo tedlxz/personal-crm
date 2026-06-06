@@ -52,7 +52,7 @@ python scripts/setup_personal_crm_vault.py --vault "/absolute/path/to/ObsidianVa
 VIAIM transcript -> calendar matching -> Claude/Codex notes -> Obsidian CRM
 ```
 
-Transcripts are not archived as shallow summaries. Codex / Claude must first convert each transcript into a detailed bullet-style Markdown meeting note named `YYYY-MM-DD_HHMM_主要人物_主题.md`, while preserving exact data, people, companies, risks, decisions, and action items.
+Transcripts are not archived as shallow summaries. Codex / Claude must first convert each transcript into a detailed bullet-style Markdown meeting note named `YYYY-MM-DD_主要人物_主题.md`, while preserving exact data, people, companies, risks, decisions, and action items. The note must then be linked back to the corresponding contact file under `10_CRM/Contacts`.
 
 ## Recommended Automation Flow
 

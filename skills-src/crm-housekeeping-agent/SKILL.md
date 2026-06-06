@@ -62,13 +62,14 @@ Use:
 
 Required note shape:
 
-- filename: `20_Meetings/YYYY/YYYY-MM-DD_HHMM_主要人物_主题.md`;
-- title: `YYYY-MM-DD HH:MM 主要人物 - 主题`;
+- filename: `20_Meetings/YYYY/YYYY-MM-DD_主要人物_主题.md`;
+- title: `YYYY-MM-DD_主要人物_主题`;
 - bullet-heavy sections;
 - accurate data retained, including amounts, percentages, dates, quantities, product names, company names, titles, and commitments;
 - action items written as Markdown checkboxes;
 - full transcript moved or linked under `90_Attachments/Transcripts`;
 - contact files updated only with stable facts and interaction rows, not full transcript text.
+- `crm_updated: true` only after corresponding contact files have been created/updated.
 
 ## Confidence Rules
 

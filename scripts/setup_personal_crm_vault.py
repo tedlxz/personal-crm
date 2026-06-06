@@ -111,7 +111,7 @@ crm_updated: false
 tags: [meeting]
 ---
 
-# {{date}} {{time}} {{primary_people}} - {{topic}}
+# {{date}}_{{primary_people}}_{{topic}}
 
 ## 会议基本信息
 
@@ -119,7 +119,7 @@ tags: [meeting]
 - 地点/形式：
 - 参与人：
 - 来源：飞书妙记 / VIAIM / 讯飞转写 / 手动记录 / 音频
-- 标题命名：`YYYY-MM-DD_HHMM_主要人物_主题.md`
+- 标题命名：`YYYY-MM-DD_主要人物_主题.md`
 - 关联联系人：
 - 关联公司：
 - Outlook 日历匹配：
@@ -289,7 +289,7 @@ INDEX_NOTE = """# Personal CRM
 ## Operating Rules
 
 - Every transcript must be summarized by Codex / Claude into detailed Markdown notes before CRM updates.
-- Meeting note filenames use `YYYY-MM-DD_HHMM_主要人物_主题.md`.
+- Meeting note filenames use `YYYY-MM-DD_主要人物_主题.md`.
 - Full transcripts stay in `90_Attachments/Transcripts`; contact files only keep stable facts and interaction rows.
 - If identity or calendar matching is uncertain, mark `needs_user_confirmation` and ask before updating contacts.
 """
@@ -308,12 +308,12 @@ Turn the raw transcript into a detailed Markdown meeting note, not a shallow sum
 Create one meeting file:
 
 ```text
-20_Meetings/YYYY/YYYY-MM-DD_HHMM_主要人物_主题.md
+20_Meetings/YYYY/YYYY-MM-DD_主要人物_主题.md
 ```
 
 Naming rules:
 
-- `YYYY-MM-DD` and `HHMM` come from transcript metadata, source timestamp, or calendar match.
+- `YYYY-MM-DD` comes from transcript metadata, source timestamp, or calendar match.
 - `主要人物` should be the main external contact or most important participant. If uncertain, use `Unknown`.
 - `主题` should be a short Chinese or English topic, max 16 characters when possible.
 - Use ASCII hyphens and underscores in the filename; avoid slashes and punctuation that break file paths.
