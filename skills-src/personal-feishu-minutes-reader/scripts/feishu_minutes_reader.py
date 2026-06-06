@@ -5,7 +5,8 @@ import os
 import re
 import sys
 import time
-from urllib.parse import quote
+from urllib.error import HTTPError
+from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
 FEISHU_BASE = "https://open.feishu.cn/open-apis"
@@ -32,6 +33,9 @@ APP_ID = os.environ.get("FEISHU_APP_ID", "")
 APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "")
 
 OAUTH_SCOPES = " ".join([
+    "minutes:minutes.search:read",
+    "minutes:minutes:readonly",
+    "minutes:minutes.transcript:export",
     "contact:user.base:readonly",
     "drive:drive:readonly",
     "docx:document",
@@ -64,14 +68,27 @@ def require_app_id():
 
 
 def request_json(method, url, headers=None, payload=None):
+    _, _, body = request_bytes(method, url, headers=headers, payload=payload)
+    return json.loads(body.decode("utf-8"))
+
+
+def request_bytes(method, url, headers=None, payload=None):
     body = None
     headers = dict(headers or {})
     if payload is not None:
         body = json.dumps(payload).encode("utf-8")
-        headers.setdefault("Content-Type", "application/json")
+        headers.setdefault("Content-Type", "application/json; charset=utf-8")
     req = Request(url, data=body, headers=headers, method=method)
-    with urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    try:
+        with urlopen(req, timeout=30) as resp:
+            return resp.status, dict(resp.headers), resp.read()
+    except HTTPError as exc:
+        details = exc.read().decode("utf-8", errors="replace")
+        try:
+            details = json.loads(details)
+        except json.JSONDecodeError:
+            pass
+        die("http_error", f"HTTP {exc.code} from Feishu.", details)
 
 
 def get_app_access_token(base):
@@ -168,14 +185,53 @@ def extract_minute_token(value):
 def read_minute_transcript(base, minute_token):
     token = require_user_token()
     minute_token = extract_minute_token(minute_token)
-    url = f"{base}/minutes/v1/minutes/{minute_token}/transcript"
-    data = request_json("GET", url, headers={"Authorization": f"Bearer {token}"})
-    if data.get("code") != 0:
-        die("minute_transcript_error", "Failed to read transcript. Use exported transcript fallback.", data)
+    params = urlencode({
+        "need_speaker": "true",
+        "need_timestamp": "true",
+        "file_format": "txt",
+    })
+    url = f"{base}/minutes/v1/minutes/{minute_token}/transcript?{params}"
+    _, headers, body = request_bytes("GET", url, headers={"Authorization": f"Bearer {token}"})
+    content_type = headers.get("Content-Type", "")
+    text = body.decode("utf-8", errors="replace")
+    if "application/json" in content_type:
+        data = json.loads(text)
+        if data.get("code") != 0:
+            die("minute_transcript_error", "Failed to read transcript. Use exported transcript fallback.", data)
     out({
         "source": "feishu_minutes",
         "minute_token": minute_token,
-        "raw": data.get("data", {}),
+        "transcript_text": text,
+    })
+
+
+def search_minutes(base, query, page_size, page_token, start, end):
+    token = require_user_token()
+    params = {
+        "page_size": str(page_size),
+        "user_id_type": "open_id",
+    }
+    if page_token:
+        params["page_token"] = page_token
+    payload = {}
+    if query:
+        payload["query"] = query
+    if start or end:
+        create_time = {}
+        if start:
+            create_time["start_time"] = start
+        if end:
+            create_time["end_time"] = end
+        payload["filter"] = {"create_time": create_time}
+    payload["sorter"] = "create_time_desc"
+    url = f"{base}/minutes/v1/minutes/search?{urlencode(params)}"
+    data = request_json("POST", url, headers={"Authorization": f"Bearer {token}"}, payload=payload)
+    if data.get("code") != 0:
+        die("search_minutes_error", "Failed to search Feishu minutes.", data)
+    out({
+        "source": "feishu_minutes",
+        "query": query,
+        "raw": data.get("data", data),
     })
 
 
@@ -185,10 +241,16 @@ def main():
         "auth_status",
         "oauth_url",
         "exchange_code",
+        "search_minutes",
         "read_minute_transcript",
     ])
     parser.add_argument("--auth-code")
     parser.add_argument("--minute-token")
+    parser.add_argument("--query", default="")
+    parser.add_argument("--page-size", type=int, default=10)
+    parser.add_argument("--page-token", default="")
+    parser.add_argument("--start", default="")
+    parser.add_argument("--end", default="")
     parser.add_argument("--use-lark", action="store_true")
     args = parser.parse_args()
     base = LARK_BASE if args.use_lark else FEISHU_BASE
@@ -200,6 +262,8 @@ def main():
         if not args.auth_code:
             die("missing_param", "--auth-code is required.")
         exchange_code(base, args.auth_code)
+    elif args.action == "search_minutes":
+        search_minutes(base, args.query, args.page_size, args.page_token, args.start, args.end)
     elif args.action == "read_minute_transcript":
         if not args.minute_token:
             die("missing_param", "--minute-token is required.")
