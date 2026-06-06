@@ -300,6 +300,110 @@ def send_test_message(base, text):
     send_text_message(base, receive_id, text)
 
 
+def build_confirmation_card(recording_title, recorded_at, reason, candidates):
+    details = f"**录音**：{recording_title}\n**时间**：{recorded_at or '待确认'}\n**原因**：{reason}"
+    elements = [
+        {"tag": "div", "text": {"tag": "lark_md", "content": details}},
+        {"tag": "hr"},
+    ]
+    if candidates:
+        elements.append({
+            "tag": "div",
+            "text": {"tag": "lark_md", "content": "**请选择归档联系人**"},
+        })
+        actions = []
+        for index, candidate in enumerate(candidates[:5], start=1):
+            name = str(candidate.get("name", "")).strip() or f"候选 {index}"
+            company = str(candidate.get("company", "")).strip()
+            score = candidate.get("score", "")
+            label_parts = [name]
+            if company:
+                label_parts.append(company)
+            label = " · ".join(label_parts)
+            if score != "":
+                label = f"{label} ({score})"
+            actions.append({
+                "tag": "button",
+                "text": {"tag": "plain_text", "content": label},
+                "type": "primary" if index == 1 else "default",
+                "value": {
+                    "command": "archive",
+                    "target": name,
+                    "recording_title": recording_title,
+                },
+            })
+        elements.append({"tag": "action", "actions": actions})
+    else:
+        elements.append({
+            "tag": "div",
+            "text": {
+                "tag": "lark_md",
+                "content": "没有找到足够可信的候选联系人。可以手动输入，或暂时跳过。",
+            },
+        })
+    elements.append({
+        "tag": "action",
+        "actions": [
+            {
+                "tag": "button",
+                "text": {"tag": "plain_text", "content": "手动输入"},
+                "type": "default",
+                "value": {"command": "manual_input", "recording_title": recording_title},
+            },
+            {
+                "tag": "button",
+                "text": {"tag": "plain_text", "content": "跳过"},
+                "type": "danger",
+                "value": {"command": "skip", "recording_title": recording_title},
+            },
+        ],
+    })
+    return {
+        "config": {"wide_screen_mode": True, "enable_forward": False},
+        "header": {
+            "template": "blue",
+            "title": {"tag": "plain_text", "content": "需要确认归档对象"},
+        },
+        "elements": elements,
+    }
+
+
+def parse_candidates(value):
+    if not value:
+        return []
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return []
+    if isinstance(parsed, dict):
+        return [parsed]
+    return parsed if isinstance(parsed, list) else []
+
+
+def send_interactive_message(base, receive_id, card):
+    tenant_token = get_tenant_access_token(base)
+    url = f"{base}/im/v1/messages?{urlencode({'receive_id_type': 'open_id'})}"
+    data = request_json("POST", url, headers={"Authorization": f"Bearer {tenant_token}"}, payload={
+        "receive_id": receive_id,
+        "msg_type": "interactive",
+        "content": json.dumps(card, ensure_ascii=False),
+    })
+    if data.get("code") != 0:
+        die("send_card_error", "Failed to send Feishu interactive card.", data)
+    out({
+        "sent": True,
+        "msg_type": "interactive",
+        "receive_id_type": "open_id",
+        "message_id": data.get("data", {}).get("message_id", ""),
+    })
+
+
+def send_confirmation_card(base, recording_title, recorded_at, reason, candidates_json):
+    receive_id = get_cached_open_id(base)
+    card = build_confirmation_card(recording_title, recorded_at, reason, parse_candidates(candidates_json))
+    send_interactive_message(base, receive_id, card)
+
+
 def extract_minute_token(value):
     patterns = [
         r"minutes/([A-Za-z0-9_-]+)",
@@ -376,6 +480,7 @@ def main():
         "user_info",
         "send_text",
         "send_test_message",
+        "send_confirmation_card",
         "search_minutes",
         "read_minute_transcript",
     ])
@@ -384,6 +489,10 @@ def main():
     parser.add_argument("--query", default="")
     parser.add_argument("--receive-id", default="")
     parser.add_argument("--text", default="Personal CRM housekeeping test message.")
+    parser.add_argument("--recording-title", default="2026-06-04_Unknown_日本泰澳投资布局")
+    parser.add_argument("--recorded-at", default="")
+    parser.add_argument("--reason", default="联系人置信度不足，需要确认归档对象。")
+    parser.add_argument("--candidates-json", default="[]")
     parser.add_argument("--page-size", type=int, default=10)
     parser.add_argument("--page-token", default="")
     parser.add_argument("--start", default="")
@@ -409,6 +518,8 @@ def main():
         send_text_message(base, args.receive_id, args.text)
     elif args.action == "send_test_message":
         send_test_message(base, args.text)
+    elif args.action == "send_confirmation_card":
+        send_confirmation_card(base, args.recording_title, args.recorded_at, args.reason, args.candidates_json)
     elif args.action == "search_minutes":
         search_minutes(base, args.query, args.page_size, args.page_token, args.start, args.end)
     elif args.action == "read_minute_transcript":

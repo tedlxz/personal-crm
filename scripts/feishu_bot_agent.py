@@ -212,6 +212,30 @@ def process_command(sender_open_id, text):
     return "我收到了。可以回复 /help 查看命令，或用 /ask 问我知识库里的内容。"
 
 
+def process_card_action(operator_open_id, value):
+    now = time.strftime("%Y-%m-%d %H:%M:%S")
+    command = (value or {}).get("command", "")
+    recording_title = (value or {}).get("recording_title", "")
+    if command == "archive":
+        target = (value or {}).get("target", "")
+        append_log(
+            "confirmation-log.md",
+            f"## {now}\n\n- sender: {operator_open_id}\n- command: /archive\n- target: {target}\n- recording: {recording_title}",
+        )
+        return {"toast": {"type": "success", "content": f"已记录归档到：{target}"}}
+    if command == "manual_input":
+        if operator_open_id:
+            send_text(operator_open_id, "请回复：/archive 联系人姓名\n或：/new 姓名 公司 Title")
+        return {"toast": {"type": "info", "content": "请在聊天里输入联系人"}}
+    if command == "skip":
+        append_log(
+            "confirmation-log.md",
+            f"## {now}\n\n- sender: {operator_open_id}\n- command: /skip\n- recording: {recording_title}",
+        )
+        return {"toast": {"type": "success", "content": "已记录跳过"}}
+    return {"toast": {"type": "warning", "content": "未识别的操作"}}
+
+
 def extract_message_text(event):
     message = event.get("message", {})
     content = message.get("content", "")
@@ -225,6 +249,19 @@ def extract_message_text(event):
 def extract_sender_open_id(event):
     sender = event.get("sender", {})
     return sender.get("sender_id", {}).get("open_id", "")
+
+
+def extract_card_operator_open_id(event):
+    operator = event.get("operator", {})
+    if operator.get("open_id"):
+        return operator.get("open_id", "")
+    return operator.get("operator_id", {}).get("open_id", "")
+
+
+def extract_card_action_value(event):
+    action = event.get("action", {})
+    value = action.get("value", {})
+    return value if isinstance(value, dict) else {}
 
 
 class FeishuHandler(BaseHTTPRequestHandler):
@@ -263,6 +300,15 @@ class FeishuHandler(BaseHTTPRequestHandler):
         header = payload.get("header", {})
         event = payload.get("event", {})
         event_type = header.get("event_type", payload.get("type", ""))
+        if event_type in ("card.action.trigger", "card.action.trigger_v1"):
+            operator_open_id = extract_card_operator_open_id(event)
+            value = extract_card_action_value(event)
+            append_log(
+                "feishu-bot-events.md",
+                f"## {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n- sender: {operator_open_id}\n- card_action: {json.dumps(value, ensure_ascii=False)}",
+            )
+            self._send_json(process_card_action(operator_open_id, value))
+            return
         if event_type != "im.message.receive_v1":
             self._send_json({"ok": True, "ignored": event_type})
             return

@@ -119,6 +119,19 @@ python3 <skill_path>/scripts/feishu_minutes_reader.py \
 
 If this fails with missing credentials, create local `.env` with `FEISHU_APP_ID` and `FEISHU_APP_SECRET`. If it fails with missing IM permissions, approve the IM scopes, publish the app, and rerun OAuth.
 
+Prefer interactive cards for low-confidence archive confirmation:
+
+```bash
+python3 <skill_path>/scripts/feishu_minutes_reader.py \
+  --action send_confirmation_card \
+  --recording-title "2026-06-04_Unknown_日本泰澳投资布局" \
+  --recorded-at "2026-06-04 12:51" \
+  --reason "联系人置信度不足，需要确认归档对象。" \
+  --candidates-json '[{"name":"Alex Chen","company":"Northstar Capital","score":72}]'
+```
+
+The card supports candidate buttons, `手动输入`, and `跳过`. Card callbacks require `card.action.trigger` to be configured on the Feishu app and handled by `scripts/feishu_bot_agent.py`.
+
 ## Fallback
 
 If the API returns permission errors:

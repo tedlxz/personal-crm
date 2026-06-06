@@ -43,24 +43,31 @@ Ask the user before writing CRM when:
 
 ## Feishu Confirmation Interface
 
-Preferred interaction is a Feishu bot or Feishu message card. The message should be short and actionable:
+Preferred interaction is a Feishu interactive card. The message should be short and actionable:
 
 ```text
 需要确认归档对象
 
 录音：2026-06-04_Unknown_日本泰澳投资布局
 时间：2026-06-04 12:51
-候选联系人：
-1. 张三 / 公司A / 置信度 72
-2. 李四 / 公司B / 置信度 61
-3. 新联系人
+原因：联系人置信度不足
 
-请回复：
-/archive 1
-/archive 2
-/new 张三 公司A Title
-/skip
+[候选联系人 A] [候选联系人 B]
+[手动输入] [跳过]
 ```
+
+Use `send_confirmation_card`:
+
+```bash
+python3 skills-src/personal-feishu-minutes-reader/scripts/feishu_minutes_reader.py \
+  --action send_confirmation_card \
+  --recording-title "2026-06-04_Unknown_日本泰澳投资布局" \
+  --recorded-at "2026-06-04 12:51" \
+  --reason "联系人置信度不足，需要确认归档对象。" \
+  --candidates-json '[{"name":"张三","company":"公司A","score":72}]'
+```
+
+If card sending or card callbacks are unavailable, fall back to a text message with `/archive`, `/new`, and `/skip` commands.
 
 If Feishu message sending is not available, write the question to:
 
@@ -80,6 +87,13 @@ Use a tunnel such as `ngrok http 9788` and configure Feishu event subscription U
 
 ```text
 https://<ngrok-domain>/feishu/events
+```
+
+Subscribe to:
+
+```text
+im.message.receive_v1
+card.action.trigger
 ```
 
 ## Suggested macOS Schedule

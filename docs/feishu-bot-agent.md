@@ -7,6 +7,7 @@ Turn the Feishu bot into the confirmation and query interface for Personal CRM.
 The bot should:
 
 - receive low-confidence archive confirmations;
+- receive interactive card button callbacks;
 - search the local Obsidian CRM vault;
 - answer knowledge-base questions with retrieved context;
 - record user decisions for the next housekeeping run;
@@ -54,6 +55,7 @@ Enable:
 - bot capability;
 - event subscription;
 - receive message event: `im.message.receive_v1`;
+- card action callback: `card.action.trigger`;
 - send message permission: `im:message:send_as_bot`;
 - app credentials in local `.env` or environment variables.
 
@@ -73,6 +75,29 @@ FEISHU_VERIFICATION_TOKEN=<token>
 /new 姓名 公司 Title
 /skip
 ```
+
+## Interactive Cards
+
+Use cards for low-confidence archive prompts. The card keeps the message short and gives buttons for likely candidates.
+
+Send a test card:
+
+```bash
+FEISHU_APP_ID="<app_id>" \
+FEISHU_APP_SECRET="<app_secret>" \
+python3 skills-src/personal-feishu-minutes-reader/scripts/feishu_minutes_reader.py \
+  --action send_confirmation_card \
+  --recording-title "2026-06-04_Unknown_日本泰澳投资布局" \
+  --recorded-at "2026-06-04 12:51" \
+  --reason "联系人置信度不足，需要确认归档对象。" \
+  --candidates-json '[{"name":"Alex Chen","company":"Northstar Capital","score":72}]'
+```
+
+Card buttons:
+
+- candidate button: records `/archive <name>`;
+- `手动输入`: asks the user to reply `/archive 联系人姓名` or `/new 姓名 公司 Title`;
+- `跳过`: records `/skip`.
 
 ## LLM Layer
 

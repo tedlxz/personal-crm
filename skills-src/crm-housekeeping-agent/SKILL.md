@@ -112,7 +112,7 @@ Decision behavior:
 - `needs_user_confirmation`: keep the meeting note as `Unknown` or pending and ask the user.
 - never auto-merge two existing contacts.
 
-Preferred confirmation interface is Feishu. If Feishu messaging is not available, write to `.crm-system/pending-confirmations.md`.
+Preferred confirmation interface is a Feishu interactive card. If card sending is not available, use a concise Feishu text message. If Feishu messaging is not available, write to `.crm-system/pending-confirmations.md`.
 
 For Feishu bot replies, use `scripts/feishu_bot_agent.py`. It records `/archive`, `/new`, and `/skip` commands into `.crm-system/confirmation-log.md` for the next housekeeping run.
 
