@@ -49,6 +49,28 @@ python3 scripts/feishu_bot_agent.py --transport websocket
 
 The process must remain running while the bot is expected to answer messages or card clicks.
 
+For daily use on macOS, install it as a local `launchd` service:
+
+```bash
+FEISHU_APP_ID="<app_id>" \
+FEISHU_APP_SECRET="<app_secret>" \
+python3 scripts/install_feishu_bot_agent_launchd.py --load
+```
+
+This creates:
+
+```text
+~/Library/LaunchAgents/com.personalcrm.feishu-bot.plist
+```
+
+Logs are written to:
+
+```text
+~/Library/Logs/PersonalCRM/
+```
+
+macOS privacy note: if the repo or vault is under `~/Documents`, a LaunchAgent may fail with `Operation not permitted` unless the relevant terminal/Python runtime has Full Disk Access. If that happens, either grant Full Disk Access, run the agent from an interactive Codex/Terminal session, or move the agent/vault to a non-protected local folder.
+
 HTTP webhook mode is kept as a fallback for deployments with a stable HTTPS callback URL:
 
 ```bash

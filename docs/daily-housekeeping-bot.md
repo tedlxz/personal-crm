@@ -100,6 +100,8 @@ im.message.receive_v1
 card.action.trigger
 ```
 
+On macOS, a background LaunchAgent may need Full Disk Access if the repo or Obsidian vault lives under `~/Documents`. If permissions block the agent, run it from Codex/Terminal or grant the runtime Full Disk Access.
+
 ## Suggested macOS Schedule
 
 Use `launchd` for a local machine:

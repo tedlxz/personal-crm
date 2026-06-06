@@ -532,6 +532,8 @@ def run_websocket_agent():
         "vault": str(vault_path()),
     }, ensure_ascii=False, indent=2))
     lark.ws.Client(app_id, app_secret, event_handler=handler, log_level=lark.LogLevel.INFO).start()
+    while True:
+        time.sleep(3600)
 
 
 class FeishuHandler(BaseHTTPRequestHandler):

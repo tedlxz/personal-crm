@@ -126,6 +126,16 @@ python3 scripts/feishu_bot_agent.py --transport websocket
 
 Use Feishu long connection for message events and card callbacks. The bot can understand short natural-language replies such as `归到 Alex Chen` or `这个联系人叫 Alex Chen`. See [Feishu Bot Agent](docs/feishu-bot-agent.md).
 
+To keep the bot running as a local macOS service:
+
+```bash
+FEISHU_APP_ID="<app_id>" \
+FEISHU_APP_SECRET="<app_secret>" \
+python3 scripts/install_feishu_bot_agent_launchd.py --load
+```
+
+If macOS blocks the service from reading `~/Documents`, grant Full Disk Access to the runtime or keep the agent running from Codex/Terminal.
+
 ## Calendar Strategy
 
 The preferred calendar source is whichever Codex/Claude Code can actually read:
