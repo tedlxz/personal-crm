@@ -6,13 +6,28 @@ import re
 import sys
 import time
 from urllib.parse import quote
-
-import requests
+from urllib.request import Request, urlopen
 
 FEISHU_BASE = "https://open.feishu.cn/open-apis"
 LARK_BASE = "https://open.larksuite.com/open-apis"
 REDIRECT_URI = "http://localhost:9876/callback"
 TOKEN_PATH = os.path.expanduser("~/.personal_feishu_user_token.json")
+
+
+def load_local_env():
+    env_path = os.path.join(os.getcwd(), ".env")
+    if not os.path.exists(env_path):
+        return
+    with open(env_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+load_local_env()
 APP_ID = os.environ.get("FEISHU_APP_ID", "")
 APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "")
 
@@ -38,17 +53,33 @@ def die(error, message, details=None):
 
 
 def require_creds():
-    if not APP_ID or not APP_SECRET:
-        die("missing_credentials", "Set FEISHU_APP_ID and FEISHU_APP_SECRET.")
+    require_app_id()
+    if not APP_SECRET:
+        die("missing_credentials", "Set FEISHU_APP_SECRET.")
+
+
+def require_app_id():
+    if not APP_ID:
+        die("missing_credentials", "Set FEISHU_APP_ID.")
+
+
+def request_json(method, url, headers=None, payload=None):
+    body = None
+    headers = dict(headers or {})
+    if payload is not None:
+        body = json.dumps(payload).encode("utf-8")
+        headers.setdefault("Content-Type", "application/json")
+    req = Request(url, data=body, headers=headers, method=method)
+    with urlopen(req, timeout=30) as resp:
+        return json.loads(resp.read().decode("utf-8"))
 
 
 def get_app_access_token(base):
     require_creds()
-    resp = requests.post(f"{base}/auth/v3/app_access_token/internal", json={
+    data = request_json("POST", f"{base}/auth/v3/app_access_token/internal", payload={
         "app_id": APP_ID,
         "app_secret": APP_SECRET,
     })
-    data = resp.json()
     if data.get("code") != 0:
         die("app_token_error", "Failed to get app_access_token.", data)
     return data["app_access_token"]
@@ -88,7 +119,7 @@ def auth_status():
 
 
 def oauth_url(base):
-    require_creds()
+    require_app_id()
     url = (
         f"{base}/authen/v1/authorize"
         f"?app_id={APP_ID}"
@@ -102,14 +133,12 @@ def oauth_url(base):
 
 def exchange_code(base, code):
     app_token = get_app_access_token(base)
-    resp = requests.post(f"{base}/authen/v1/oidc/access_token", headers={
+    data = request_json("POST", f"{base}/authen/v1/oidc/access_token", headers={
         "Authorization": f"Bearer {app_token}",
-        "Content-Type": "application/json",
-    }, json={
+    }, payload={
         "grant_type": "authorization_code",
         "code": code,
     })
-    data = resp.json()
     if data.get("code") != 0:
         die("exchange_code_error", "Failed to exchange OAuth code.", data)
     cached = save_token(data.get("data", {}))
@@ -140,8 +169,7 @@ def read_minute_transcript(base, minute_token):
     token = require_user_token()
     minute_token = extract_minute_token(minute_token)
     url = f"{base}/minutes/v1/minutes/{minute_token}/transcript"
-    resp = requests.get(url, headers={"Authorization": f"Bearer {token}"})
-    data = resp.json()
+    data = request_json("GET", url, headers={"Authorization": f"Bearer {token}"})
     if data.get("code") != 0:
         die("minute_transcript_error", "Failed to read transcript. Use exported transcript fallback.", data)
     out({
@@ -180,4 +208,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
