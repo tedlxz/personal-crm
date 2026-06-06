@@ -35,6 +35,8 @@ APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "")
 
 OAUTH_SCOPES = " ".join([
     "offline_access",
+    "im:message",
+    "im:message:send_as_bot",
     "minutes:minutes.search:read",
     "minutes:minutes:readonly",
     "minutes:minutes.transcript:export",
@@ -104,6 +106,17 @@ def get_app_access_token(base):
     return data["app_access_token"]
 
 
+def get_tenant_access_token(base):
+    require_creds()
+    data = request_json("POST", f"{base}/auth/v3/tenant_access_token/internal", payload={
+        "app_id": APP_ID,
+        "app_secret": APP_SECRET,
+    })
+    if data.get("code") != 0:
+        die("tenant_token_error", "Failed to get tenant_access_token.", data)
+    return data["tenant_access_token"]
+
+
 def load_token(valid_only=True):
     if not os.path.exists(TOKEN_PATH):
         return None
@@ -148,6 +161,31 @@ def auth_status():
         "refresh_token_expires_in_seconds": int(cached_any.get("refresh_expire_time", 0) - time.time()) if cached_any and cached_any.get("refresh_expire_time") else None,
         "scope": cached_any.get("scope", "") if cached_any else "",
         "user": cached_any.get("name", "") if cached_any else "",
+    })
+
+
+def user_info(base):
+    token = require_user_token()
+    data = request_json("GET", f"{base}/authen/v1/user_info", headers={"Authorization": f"Bearer {token}"})
+    if data.get("code") != 0:
+        die("user_info_error", "Failed to read Feishu user info.", data)
+    info = data.get("data", data)
+    cached = load_token(valid_only=False) or {}
+    changed = False
+    for key in ("open_id", "user_id", "union_id", "name", "en_name", "email"):
+        if info.get(key) and cached.get(key) != info.get(key):
+            cached[key] = info.get(key)
+            changed = True
+    if changed and cached.get("user_access_token"):
+        with open(TOKEN_PATH, "w") as f:
+            json.dump(cached, f, ensure_ascii=False, indent=2)
+    out({
+        "open_id": info.get("open_id", ""),
+        "user_id": info.get("user_id", ""),
+        "union_id": info.get("union_id", ""),
+        "name": info.get("name", ""),
+        "email": info.get("email", ""),
+        "token_path_updated": changed,
     })
 
 
@@ -214,6 +252,52 @@ def require_user_token():
     if not cached:
         die("not_authenticated", "Run oauth_url and exchange_code first.")
     return cached["user_access_token"]
+
+
+def get_cached_open_id(base):
+    cached = load_token(valid_only=False) or {}
+    if cached.get("open_id"):
+        return cached["open_id"]
+    token = require_user_token()
+    data = request_json("GET", f"{base}/authen/v1/user_info", headers={"Authorization": f"Bearer {token}"})
+    if data.get("code") != 0:
+        die("user_info_error", "Failed to read Feishu user info.", data)
+    info = data.get("data", data)
+    open_id = info.get("open_id", "")
+    if not open_id:
+        die("missing_open_id", "Feishu user_info did not return open_id.")
+    cached.update({
+        "open_id": open_id,
+        "user_id": info.get("user_id", cached.get("user_id", "")),
+        "union_id": info.get("union_id", cached.get("union_id", "")),
+        "name": info.get("name", cached.get("name", "")),
+        "email": info.get("email", cached.get("email", "")),
+    })
+    with open(TOKEN_PATH, "w") as f:
+        json.dump(cached, f, ensure_ascii=False, indent=2)
+    return open_id
+
+
+def send_text_message(base, receive_id, text):
+    tenant_token = get_tenant_access_token(base)
+    url = f"{base}/im/v1/messages?{urlencode({'receive_id_type': 'open_id'})}"
+    data = request_json("POST", url, headers={"Authorization": f"Bearer {tenant_token}"}, payload={
+        "receive_id": receive_id,
+        "msg_type": "text",
+        "content": json.dumps({"text": text}, ensure_ascii=False),
+    })
+    if data.get("code") != 0:
+        die("send_message_error", "Failed to send Feishu bot message.", data)
+    out({
+        "sent": True,
+        "receive_id_type": "open_id",
+        "message_id": data.get("data", {}).get("message_id", ""),
+    })
+
+
+def send_test_message(base, text):
+    receive_id = get_cached_open_id(base)
+    send_text_message(base, receive_id, text)
 
 
 def extract_minute_token(value):
@@ -289,12 +373,17 @@ def main():
         "oauth_url",
         "exchange_code",
         "refresh_token",
+        "user_info",
+        "send_text",
+        "send_test_message",
         "search_minutes",
         "read_minute_transcript",
     ])
     parser.add_argument("--auth-code")
     parser.add_argument("--minute-token")
     parser.add_argument("--query", default="")
+    parser.add_argument("--receive-id", default="")
+    parser.add_argument("--text", default="Personal CRM housekeeping test message.")
     parser.add_argument("--page-size", type=int, default=10)
     parser.add_argument("--page-token", default="")
     parser.add_argument("--start", default="")
@@ -312,6 +401,14 @@ def main():
         exchange_code(base, args.auth_code)
     elif args.action == "refresh_token":
         refresh_user_token(base)
+    elif args.action == "user_info":
+        user_info(base)
+    elif args.action == "send_text":
+        if not args.receive_id:
+            die("missing_param", "--receive-id is required.")
+        send_text_message(base, args.receive_id, args.text)
+    elif args.action == "send_test_message":
+        send_test_message(base, args.text)
     elif args.action == "search_minutes":
         search_minutes(base, args.query, args.page_size, args.page_token, args.start, args.end)
     elif args.action == "read_minute_transcript":

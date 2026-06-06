@@ -118,7 +118,9 @@ Append results to .crm-system/run-log.md.
 The Feishu app must:
 
 - include `offline_access` in OAuth scope;
+- include `im:message` and `im:message:send_as_bot` if Feishu message notifications are enabled;
 - have the offline access permission approved;
+- have bot capability enabled if messages should be sent through Feishu;
 - have refresh user_access_token enabled in security settings, if the switch is visible;
 - be republished after permission/security changes.
 

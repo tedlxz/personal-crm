@@ -22,6 +22,8 @@ Configure the Feishu custom app before OAuth:
 Redirect URL: http://localhost:9876/callback
 Required scopes:
   offline_access
+  im:message
+  im:message:send_as_bot
   minutes:minutes.search:read
   minutes:minutes:readonly
   minutes:minutes.transcript:export
@@ -64,6 +66,14 @@ python3 <skill_path>/scripts/feishu_minutes_reader.py --action refresh_token
 
 The script also auto-refreshes when `search_minutes` or `read_minute_transcript` needs a fresh token. If refresh fails, regenerate the OAuth URL and exchange a new code.
 
+Read current authorized user:
+
+```bash
+python3 <skill_path>/scripts/feishu_minutes_reader.py --action user_info
+```
+
+This saves `open_id` into `~/.personal_feishu_user_token.json` when Feishu returns it.
+
 ## Search Minutes
 
 Prefer searching with a time range. Feishu may return no items for an empty search even when historical minutes exist.
@@ -87,6 +97,27 @@ python3 <skill_path>/scripts/feishu_minutes_reader.py \
 ```
 
 The transcript endpoint returns `text/plain`. Pass `transcript_text` to `personal-obsidian-crm-archiver` or `crm-housekeeping-agent`.
+
+## Send Confirmation Message
+
+After the app enables bot capability and `im:message:send_as_bot`, send a test message to the current OAuth user:
+
+```bash
+python3 <skill_path>/scripts/feishu_minutes_reader.py \
+  --action send_test_message \
+  --text "Personal CRM test message."
+```
+
+Send to a known `open_id`:
+
+```bash
+python3 <skill_path>/scripts/feishu_minutes_reader.py \
+  --action send_text \
+  --receive-id "<open_id>" \
+  --text "需要确认归档对象：..."
+```
+
+If this fails with missing credentials, create local `.env` with `FEISHU_APP_ID` and `FEISHU_APP_SECRET`. If it fails with missing IM permissions, approve the IM scopes, publish the app, and rerun OAuth.
 
 ## Fallback
 
