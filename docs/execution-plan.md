@@ -153,23 +153,108 @@ python setup_personal_crm_vault.py --vault "<vault_path>"
 
 Claude Code 使用 `personal-feishu-minutes-reader`。
 
-首次授权：
+#### 4.2.1 后台配置
 
-```bash
-python <skill_path>/scripts/feishu_minutes_reader.py --action auth_status
-python <skill_path>/scripts/feishu_minutes_reader.py --action oauth_url
-python <skill_path>/scripts/feishu_minutes_reader.py --action exchange_code --auth-code "<code>"
+在飞书开放平台创建自建应用后，先完成后台配置：
+
+1. 进入应用的「凭证与基础信息」，取得 `App ID` 和 `App Secret`。
+2. 进入「安全设置」，添加 OAuth 重定向 URL：
+
+```text
+http://localhost:9876/callback
 ```
 
-读取已有妙记：
+3. 进入「权限管理」，申请并发布以下权限：
+
+```text
+minutes:minutes.search:read
+minutes:minutes:readonly
+minutes:minutes.transcript:export
+contact:user.base:readonly
+drive:drive:readonly
+docx:document
+search:docs:read
+calendar:calendar:readonly
+```
+
+对应中文权限包括：搜索妙记、查看妙记、导出妙记转写文字、获取用户基本信息、查看云空间文件、文档读取/管理、搜索云文档、查看日历。
+
+注意：即使是个人使用，飞书开放平台应用也挂在一个租户/组织下。权限变更通常需要发布新版本并通过管理员审核；如果当前账号就是该空间管理员，可在管理后台自行审核。
+
+#### 4.2.2 本地配置
+
+在项目根目录创建 `.env`。该文件已被 `.gitignore` 排除，不应提交：
+
+```text
+FEISHU_APP_ID=<app_id>
+FEISHU_APP_SECRET=<app_secret>
+```
+
+如果 `App Secret` 曾经暴露到聊天或文档中，正式使用前应在飞书后台重新生成。
+
+#### 4.2.3 OAuth 授权
+
+首次授权或新增权限后重新授权：
 
 ```bash
-python <skill_path>/scripts/feishu_minutes_reader.py \
+python3 skills-src/personal-feishu-minutes-reader/scripts/feishu_minutes_reader.py --action auth_status
+python3 skills-src/personal-feishu-minutes-reader/scripts/feishu_minutes_reader.py --action oauth_url
+python3 skills-src/personal-feishu-minutes-reader/scripts/feishu_minutes_reader.py --action exchange_code --auth-code "<code>"
+```
+
+`oauth_url` 输出的链接需要由用户在浏览器中打开并授权。授权后浏览器会跳转到：
+
+```text
+http://localhost:9876/callback?code=<code>&state=personal_feishu_minutes
+```
+
+页面打不开是正常的，因为本地没有启动 Web server；只需要复制地址栏里的 `code`。`code` 通常有效期很短且只能使用一次。
+
+授权成功后，本地 token 会保存到：
+
+```text
+~/.personal_feishu_user_token.json
+```
+
+#### 4.2.4 搜索历史妙记
+
+不要只做空搜索。实测飞书空搜索可能返回 `items: []`，即使账号里有历史妙记。应优先带时间范围：
+
+```bash
+python3 skills-src/personal-feishu-minutes-reader/scripts/feishu_minutes_reader.py \
+  --action search_minutes \
+  --page-size 10 \
+  --start "2026-01-01T00:00:00+08:00" \
+  --end "2026-12-31T23:59:59+08:00"
+```
+
+返回结果中的 `token` 是后续导出转写的 `minute_token`，`meta_data.app_link` 应保存为会议 note 的 `source_link`。
+
+#### 4.2.5 导出单条妙记转写
+
+```bash
+python3 skills-src/personal-feishu-minutes-reader/scripts/feishu_minutes_reader.py \
   --action read_minute_transcript \
   --minute-token "<minute_token_or_url>"
 ```
 
-如果 API 权限不足，Claude Code 应改用 fallback：
+接口返回 `text/plain` 转写文本，包含时间、关键词、speaker 和 timestamp。后续交给 `personal-obsidian-crm-archiver` 或 `crm-housekeeping-agent` 生成会议 note、联系人更新和 follow-up。
+
+#### 4.2.6 常见错误处理
+
+如果返回：
+
+```text
+minutes:minutes.search:read
+```
+
+说明后台权限或当前 user token 缺少「搜索妙记」授权。处理方式：
+
+1. 确认飞书后台已申请并审核通过 `minutes:minutes.search:read`。
+2. 重新运行 `oauth_url`，让用户再次授权。
+3. 用新的 `code` 运行 `exchange_code`，刷新本地 token。
+
+如果 API 权限仍不足，Claude Code 应改用 fallback：
 
 ```text
 请从飞书妙记复制 transcript 或导出文本，我会继续归档，不阻塞 CRM 更新。

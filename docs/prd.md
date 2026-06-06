@@ -39,11 +39,14 @@ Claude Code 可运行脚本自动创建目录、模板和配置文件。
 
 ### F3. 飞书妙记读取
 
-系统能通过用户授权读取已有妙记 transcript，或在权限不足时接受用户导出的 transcript。
+系统能通过用户授权搜索历史飞书妙记、读取已有妙记 transcript，或在权限不足时接受用户导出的 transcript。
 
 验收：
 
-- 输入飞书妙记链接或 token，返回 transcript 或明确 fallback。
+- 完成飞书 OAuth 后，本地 token 写入 `~/.personal_feishu_user_token.json`。
+- 支持按时间范围搜索历史妙记，返回 `token`、标题/摘要信息和 `app_link`。
+- 输入飞书妙记链接或 token，返回 `text/plain` transcript 或明确 fallback。
+- 遇到 `minutes:minutes.search:read` 等缺权限错误时，提示后台补权限并重新 OAuth 授权。
 - source link 保存在会议文件。
 
 ### F4. 日历匹配
@@ -194,7 +197,7 @@ VIAIM audio → ASR → transcript → Obsidian CRM
 | M2 | 手动输入 transcript 可归档 CRM |
 | M3 | 日历匹配可用，支持 Outlook 优先、Gmail/ICS 兜底 |
 | M4 | VIAIM Notes 可自动或半自动同步 |
-| M5 | 飞书妙记读取可用 |
+| M5 | 飞书妙记搜索、读取和 transcript 导出可用 |
 | M6 | 可选实现 VIAIM 音频自动上传飞书妙记 |
 | M7 | Housekeeping agent 可扫描未归档 transcript 并生成 insights |
 | M8 | WeChat contact ingestion 可辅助建立联系人候选 |

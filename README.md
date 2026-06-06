@@ -65,6 +65,21 @@ VIAIM Cloud
   -> update contact CRM
 ```
 
+## Feishu Minutes Flow
+
+The Feishu Minutes path has been validated with personal user OAuth:
+
+```text
+Feishu custom app
+  -> approve minutes scopes
+  -> OAuth user authorization
+  -> search historical minutes by time range
+  -> export transcript by minute token
+  -> archive into Obsidian CRM
+```
+
+See [docs/execution-plan.md](docs/execution-plan.md) section `4.2` for the exact permissions, redirect URL, commands, and error handling notes.
+
 ## CRM Housekeeping
 
 The long-running value comes from recurring housekeeping:
