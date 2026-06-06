@@ -127,6 +127,18 @@ Claude Code 可运行脚本自动创建目录、模板和配置文件。
 - access token 过期或即将过期时自动刷新。
 - refresh 失败时明确要求重新 OAuth，不静默跳过飞书妙记。
 
+### F10. Feishu Bot Agent
+
+系统能通过飞书 bot 与用户互动，处理低置信度归档确认和知识库问答。
+
+验收：
+
+- bot 能给用户发送低置信度归档确认消息。
+- bot 后端能接收 `/archive`、`/new`、`/skip`。
+- bot 能搜索 Obsidian vault。
+- bot 可选接入大模型，用检索到的知识库上下文回答 `/ask`。
+- bot 不自动合并联系人；合并必须生成 proposal 并等待确认。
+
 ## 4. 数据结构
 
 ### Contact

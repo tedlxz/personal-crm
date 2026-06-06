@@ -13,10 +13,12 @@ docs/
   crm-housekeeping-agent.md
   contact-matching-and-dedupe.md
   daily-housekeeping-bot.md
+  feishu-bot-agent.md
   viaim-transcript-automation-validation.md
   wechat-contact-ingestion.md
 scripts/
   contact_matcher.py
+  feishu_bot_agent.py
   install_housekeeping_launchd.py
   setup_personal_crm_vault.py
 skills/
@@ -116,6 +118,14 @@ python3 scripts/install_housekeeping_launchd.py \
   --time "20:30"
 ```
 
+For Feishu bot confirmation and knowledge-base Q&A, run:
+
+```bash
+python3 scripts/feishu_bot_agent.py --host 127.0.0.1 --port 9788
+```
+
+Then expose `/feishu/events` through a tunnel and configure it in Feishu event subscriptions. See [Feishu Bot Agent](docs/feishu-bot-agent.md).
+
 ## Calendar Strategy
 
 The preferred calendar source is whichever Codex/Claude Code can actually read:
@@ -138,6 +148,7 @@ The preferred calendar source is whichever Codex/Claude Code can actually read:
 - [PRD](docs/prd.md)
 - [CRM Housekeeping Agent](docs/crm-housekeeping-agent.md)
 - [Daily Housekeeping Bot](docs/daily-housekeeping-bot.md)
+- [Feishu Bot Agent](docs/feishu-bot-agent.md)
 - [Contact Matching And Dedupe](docs/contact-matching-and-dedupe.md)
 - [VIAIM Automation Validation](docs/viaim-transcript-automation-validation.md)
 - [WeChat Contact Ingestion](docs/wechat-contact-ingestion.md)

@@ -13,6 +13,8 @@ Package a reusable automation system for personal CRM and recording management:
 - Read Feishu Minutes where available.
 - Match meetings against calendar sources.
 - Archive structured notes into Obsidian.
+- Ask low-confidence archive questions through Feishu bot.
+- Search and answer from the local Obsidian knowledge base through a bot backend.
 
 ## Installable Skills
 
@@ -32,6 +34,9 @@ Package a reusable automation system for personal CRM and recording management:
 | Script | Purpose |
 | --- | --- |
 | `scripts/setup_personal_crm_vault.py` | Bootstrap a local Obsidian vault. |
+| `scripts/contact_matcher.py` | Score contact candidates for conservative CRM archiving. |
+| `scripts/feishu_bot_agent.py` | Local Feishu event backend for confirmation commands and knowledge-base search. |
+| `scripts/install_housekeeping_launchd.py` | Generate a macOS daily housekeeping LaunchAgent. |
 | `skills-src/viaim-note-sync/scripts/import_viaim_exports.py` | Import exported VIAIM files into the vault inbox. |
 | `skills-src/personal-feishu-minutes-reader/scripts/feishu_minutes_reader.py` | Feishu OAuth and Minutes transcript reader. |
 
@@ -42,3 +47,5 @@ Package a reusable automation system for personal CRM and recording management:
 - Verified target transcript can be extracted directly from DOM.
 - Verified Python scripts compile.
 - Added CRM housekeeping, contact-building, and WeChat contact ingestion design.
+- Verified Feishu bot can send low-confidence archive questions.
+- Verified local Feishu bot backend handles `/pending`, `/search`, and `/archive` simulation events.

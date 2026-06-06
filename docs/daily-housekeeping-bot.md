@@ -70,6 +70,18 @@ If Feishu message sending is not available, write the question to:
 
 and report it in the Codex thread.
 
+The local bot backend is:
+
+```bash
+python3 scripts/feishu_bot_agent.py --host 127.0.0.1 --port 9788
+```
+
+Use a tunnel such as `ngrok http 9788` and configure Feishu event subscription URL:
+
+```text
+https://<ngrok-domain>/feishu/events
+```
+
 ## Suggested macOS Schedule
 
 Use `launchd` for a local machine:
