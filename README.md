@@ -8,7 +8,7 @@ It connects meeting transcripts from VIAIM / iFLYTEK, Feishu Minutes, and calend
 
 第一次了解这个项目，建议先读：
 
-[Personal CRM 系统概览](docs/system-overview.zh.md)
+[System Overview (first read)](System%20Overview%20%28first%20read%29.md)
 
 里面有系统示意图、核心功能、日常使用方式和需要哪些授权。
 
@@ -77,7 +77,6 @@ START_HERE_拖给Codex安装.md
 START_HERE_INSTALL_FOR_CODEX.md
 .env.example
 docs/
-  system-overview.zh.md
   execution-plan.md
   prd.md
   crm-housekeeping-agent.md

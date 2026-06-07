@@ -20,7 +20,7 @@ Package a reusable automation system for personal CRM and recording management:
 
 | File | Purpose |
 | --- | --- |
-| `docs/system-overview.zh.md` | User-facing Chinese system overview with architecture diagram and feature map. |
+| `System Overview (first read).md` | User-facing Chinese system overview with architecture diagram and feature map. |
 | `START_HERE_拖给Codex安装.md` | Drag this file into Codex to let Codex guide a Chinese first-time install. |
 | `START_HERE_INSTALL_FOR_CODEX.md` | ASCII-name fallback for zip tools that garble Chinese filenames. |
 | `.env.example` | Safe local config template. Copy to `.env` or use the installer. |
