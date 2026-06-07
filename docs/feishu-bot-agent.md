@@ -130,7 +130,15 @@ The agent writes the structured result to:
 .crm-system/confirmation-log.md
 ```
 
-The next housekeeping run applies that confirmation to the Obsidian CRM.
+The agent should also apply the confirmation immediately when it can find the meeting note:
+
+- rename `YYYY-MM-DD_Unknown_主题.md` to `YYYY-MM-DD_联系人_主题.md`;
+- update meeting frontmatter to `match_confidence: "confirmed_by_user"` and `crm_updated: true`;
+- create or update the contact file under `10_CRM/Contacts/`;
+- append the meeting to the contact's `对话记录更新`;
+- mark the pending confirmation as `resolved`.
+
+If the meeting note cannot be found, the agent still records `confirmation-log.md` and housekeeping will retry later.
 
 ## Commands
 
@@ -191,7 +199,8 @@ housekeeping finds uncertain transcript
   -> send Feishu message
   -> user clicks a candidate or replies naturally
   -> bot records confirmation-log.md
-  -> next housekeeping applies the decision
+  -> bot immediately renames the meeting note and updates the contact CRM file
+  -> housekeeping later audits unresolved confirmations only
 ```
 
 The bot should not directly merge contacts. Merge requests must be written as proposals under:

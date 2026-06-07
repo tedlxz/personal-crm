@@ -114,7 +114,9 @@ Decision behavior:
 
 Preferred confirmation interface is a Feishu interactive card. If card sending is not available, use a concise Feishu text message. If Feishu messaging is not available, write to `.crm-system/pending-confirmations.md`.
 
-For Feishu bot replies, use `scripts/feishu_bot_agent.py`. It records `/archive`, `/new`, and `/skip` commands into `.crm-system/confirmation-log.md` for the next housekeeping run. It also understands natural-language replies after a pending card, such as `Alex Chen`, `这个联系人叫 Alex Chen`, `归到 Alex Chen`, `新建 Alex Chen Northstar Advisor`, and `跳过`.
+For Feishu bot replies, use `scripts/feishu_bot_agent.py`. It records `/archive`, `/new`, and `/skip` commands into `.crm-system/confirmation-log.md`. It also understands natural-language replies after a pending card, such as `Alex Chen`, `这个联系人叫 Alex Chen`, `归到 Alex Chen`, `新建 Alex Chen Northstar Advisor`, and `跳过`.
+
+When the user confirms a contact, the bot should immediately apply the result if the meeting note can be found: rename `Unknown` note titles, update frontmatter, create/update the contact file, append the conversation row, and mark the pending item resolved. Housekeeping should only retry confirmations that were logged but not applied.
 
 ## Daily Automation
 

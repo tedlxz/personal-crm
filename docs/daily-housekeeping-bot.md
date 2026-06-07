@@ -79,6 +79,15 @@ Alex Chen
 跳过
 ```
 
+After a user confirms the contact, the bot should apply the result immediately when possible:
+
+- rename `Unknown` meeting notes to the confirmed contact title;
+- set `match_confidence: "confirmed_by_user"`;
+- set `crm_updated: true`;
+- create or update the contact file;
+- append the meeting to `对话记录更新`;
+- mark the pending item as `resolved`.
+
 If Feishu message sending is not available, write the question to:
 
 ```text

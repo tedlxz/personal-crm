@@ -142,6 +142,8 @@ Alex Chen
 跳过
 ```
 
+After confirmation, the bot should immediately apply the CRM update when possible: rename `Unknown` meeting notes, update `crm_updated: true`, create/update the contact file, append the meeting row, and mark the pending item resolved.
+
 ## Fallback
 
 If the API returns permission errors:

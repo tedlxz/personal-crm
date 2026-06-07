@@ -333,15 +333,230 @@ def process_knowledge_query(text):
     return answer or context
 
 
+def safe_filename_person(name):
+    cleaned = clean_contact_target(name)
+    cleaned = re.sub(r"[\\/:*?\"<>|#^[\\]]+", "", cleaned)
+    cleaned = re.sub(r"\s+", "-", cleaned.strip())
+    return cleaned or "Unknown"
+
+
+def split_recording_title(recording_title):
+    parts = (recording_title or "").split("_", 2)
+    if len(parts) != 3:
+        return "", "", ""
+    return parts[0], parts[1], parts[2]
+
+
+def find_meeting_note(recording_title):
+    date, _person, topic = split_recording_title(recording_title)
+    year = date[:4] if date else time.strftime("%Y")
+    meetings_dir = vault_path() / "20_Meetings" / year
+    exact = meetings_dir / f"{recording_title}.md"
+    if exact.exists():
+        return exact
+    if topic and meetings_dir.exists():
+        matches = sorted(meetings_dir.glob(f"*_{topic}.md"))
+        if matches:
+            return matches[0]
+    return None
+
+
+def update_meeting_note_for_contact(note_path, target):
+    old_stem = note_path.stem
+    date, _old_person, topic = split_recording_title(old_stem)
+    if not date or not topic:
+        return note_path, old_stem
+    new_stem = f"{date}_{safe_filename_person(target)}_{topic}"
+    new_path = note_path.with_name(f"{new_stem}.md")
+    text = note_path.read_text(encoding="utf-8")
+    text = text.replace(old_stem, new_stem)
+    text = re.sub(r'^title: ".*"$', f'title: "{date} {target} {topic}"', text, flags=re.M)
+    text = re.sub(r'^participants: .*$',
+                  f'participants: ["{target}"]', text, flags=re.M)
+    text = re.sub(r'^primary_people: .*$',
+                  f'primary_people: ["{target}"]', text, flags=re.M)
+    text = re.sub(r'^contacts: .*$',
+                  f'contacts: ["[[{target}]]"]', text, flags=re.M)
+    text = re.sub(r'^match_confidence: .*$',
+                  'match_confidence: "confirmed_by_user"', text, flags=re.M)
+    text = re.sub(r'^crm_updated: .*$',
+                  'crm_updated: true', text, flags=re.M)
+    text = re.sub(r'^tags: .*$',
+                  'tags: [meeting, viaim, crm-updated]', text, flags=re.M)
+    if "confirmed_by:" not in text:
+        text = text.replace('match_confidence: "confirmed_by_user"\n',
+                            'match_confidence: "confirmed_by_user"\nconfirmed_by: "feishu_bot"\n')
+    if "confirmed_at:" not in text:
+        text = text.replace('confirmed_by: "feishu_bot"\n',
+                            f'confirmed_by: "feishu_bot"\nconfirmed_at: "{date}"\n')
+    text = text.replace("参与人：Unknown，转写未提供清晰姓名", f"参与人：{target}，经飞书 bot 确认归档")
+    text = text.replace("关联联系人：待确认", f"关联联系人：[[{target}]]")
+    text = text.replace("匹配置信度：needs_user_confirmation", "匹配置信度：confirmed_by_user")
+    text = text.replace("当前不能自动更新联系人，因为 transcript 没有可确认的人名。", f"已更新到 [[{target}]] 的 `对话记录更新`。")
+    text = text.replace("待用户确认主联系人后，应把本次互动追加到该联系人 `对话记录更新`。\n", "")
+    if note_path != new_path and new_path.exists():
+        new_path.write_text(text, encoding="utf-8")
+        note_path.unlink()
+    else:
+        note_path.write_text(text, encoding="utf-8")
+        if note_path != new_path:
+            note_path.rename(new_path)
+    return new_path, new_stem
+
+
+def ensure_contact_for_archive(target, meeting_stem, topic):
+    contacts_dir = vault_path() / "10_CRM" / "Contacts"
+    contacts_dir.mkdir(parents=True, exist_ok=True)
+    contact_path = contacts_dir / f"{target}.md"
+    row = (
+        f"| {meeting_stem[:10]} | Feishu bot confirmed archive | [[{meeting_stem}]] | "
+        f"已确认该会议归档到 {target}；主题：{topic} | 补充 title、公司、联系方式；确认是否需要合并同名/近似联系人 |"
+    )
+    if contact_path.exists():
+        text = contact_path.read_text(encoding="utf-8")
+        if f"[[{meeting_stem}]]" not in text:
+            if "| --- | --- | --- | --- | --- |" in text:
+                text = text.replace("| --- | --- | --- | --- | --- |\n", f"| --- | --- | --- | --- | --- |\n{row}\n", 1)
+            else:
+                text += f"\n\n## 对话记录更新\n\n| 日期 | 场景 | 会议/对话 | 核心内容 | 后续动作 |\n| --- | --- | --- | --- | --- |\n{row}\n"
+        text = re.sub(r'^last_contact_date: ".*"$', f'last_contact_date: "{meeting_stem[:10]}"', text, flags=re.M)
+        contact_path.write_text(text, encoding="utf-8")
+        return contact_path
+    text = f"""---
+type: crm_contact
+name: "{target}"
+title: ""
+company: ""
+company_file: ""
+status: active
+relationship_strength: unknown
+first_met_date: "{meeting_stem[:10]}"
+first_met_place: ""
+introduced_by: ""
+last_contact_date: "{meeting_stem[:10]}"
+next_follow_up_date: ""
+sensitivity: confidential
+tags: [crm, needs-confirmation]
+---
+
+# {target}
+
+## 基础信息
+
+- 姓名：{target}
+- Title：待确认
+- 公司：待确认
+- 公司简介：
+- 所在城市/地区：
+- 联系方式：
+- 主要标签：{topic}
+
+## 建立联系的背景
+
+- 何时建立联系：{meeting_stem[:10]}
+- 何地建立联系：待确认
+- 通过谁认识：待确认
+- 当时场景：{topic}
+- 初始印象：
+- 对方认识的人：
+- 与使用者/团队的关系：待确认
+
+## 公司与角色
+
+- 公司名称：待确认
+- 公司做什么：
+- 对方在公司的角色：待确认
+- 对方负责的业务/资源：
+- 公司与使用者关注领域的关系：
+
+## 关系网络
+
+- 介绍人：
+- 共同认识的人：
+- 可能影响的人：
+- 对方重视的关系：
+
+## 当前画像
+
+- 关注点：待从后续会议中补充
+- 需求/痛点：
+- 能提供的资源：
+- 可能合作方向：
+- 沟通偏好：
+- 注意事项：由飞书 bot 低置信度归档确认创建，身份细节待补充。
+
+## 对话记录更新
+
+| 日期 | 场景 | 会议/对话 | 核心内容 | 后续动作 |
+| --- | --- | --- | --- | --- |
+{row}
+
+## 待办与跟进
+
+- [ ] 确认 {target} 的 title、公司和联系方式。
+- [ ] 检查是否需要与已有相似联系人合并。
+
+## 关键洞察
+
+-
+
+## 相关链接
+
+- 公司：
+- 相关会议：[[{meeting_stem}]]
+- 相关项目：{topic}
+- 相关 insight：
+"""
+    contact_path.write_text(text, encoding="utf-8")
+    return contact_path
+
+
+def mark_pending_resolved(old_recording_title, new_meeting_stem, target):
+    path = vault_path() / ".crm-system" / "pending-confirmations.md"
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8", errors="replace")
+    text = text.replace(old_recording_title, new_meeting_stem)
+    text = re.sub(r"- 状态：needs_user_confirmation", "- 状态：resolved", text)
+    text = re.sub(r"- 原因：.*", f"- 确认结果：{target}", text)
+    text = re.sub(
+        r"- 请确认归档对象：\n(?:  - .*\n?)+",
+        f"- 已处理：meeting note 已改名，CRM 联系人 [[{target}]] 已创建/更新并写入对话记录。\n",
+        text,
+    )
+    path.write_text(text, encoding="utf-8")
+
+
+def apply_archive_confirmation(recording_title, target):
+    if not recording_title or not target:
+        return {"applied": False, "reason": "missing_recording_or_target"}
+    note_path = find_meeting_note(recording_title)
+    if not note_path:
+        return {"applied": False, "reason": "meeting_note_not_found", "recording": recording_title}
+    new_path, new_stem = update_meeting_note_for_contact(note_path, target)
+    _date, _person, topic = split_recording_title(new_stem)
+    contact_path = ensure_contact_for_archive(target, new_stem, topic)
+    mark_pending_resolved(recording_title, new_stem, target)
+    return {
+        "applied": True,
+        "meeting_note": str(new_path.relative_to(vault_path())),
+        "contact": str(contact_path.relative_to(vault_path())),
+    }
+
+
 def record_archive(sender_open_id, target, recording_title=""):
     now = time.strftime("%Y-%m-%d %H:%M:%S")
+    apply_result = apply_archive_confirmation(recording_title, target) if recording_title else {"applied": False}
     recording_line = f"\n- recording: {recording_title}" if recording_title else ""
+    apply_line = f"\n- applied: {json.dumps(apply_result, ensure_ascii=False)}"
     append_log(
         "confirmation-log.md",
-        f"## {now}\n\n- sender: {sender_open_id}\n- command: /archive\n- target: {target}{recording_line}",
+        f"## {now}\n\n- sender: {sender_open_id}\n- command: /archive\n- target: {target}{recording_line}{apply_line}",
     )
     clear_pending_confirmation(sender_open_id)
-    return f"已记录确认：归档到「{target}」。下一次 housekeeping 会据此更新 CRM。"
+    if apply_result.get("applied"):
+        return f"已归档到「{target}」，meeting note 和联系人 CRM 已更新。"
+    return f"已记录确认：归档到「{target}」。但还没找到可自动更新的 meeting note，下一次 housekeeping 会继续处理。"
 
 
 def record_new_contact(sender_open_id, args, recording_title=""):
