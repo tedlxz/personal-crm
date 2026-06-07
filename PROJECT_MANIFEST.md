@@ -36,6 +36,7 @@ Package a reusable automation system for personal CRM and recording management:
 | `scripts/setup_personal_crm_vault.py` | Bootstrap a local Obsidian vault. |
 | `scripts/contact_matcher.py` | Score contact candidates for conservative CRM archiving. |
 | `scripts/feishu_bot_agent.py` | Local Feishu event backend for confirmation commands and knowledge-base search. |
+| `scripts/lark_codex_bridge.mjs` | Lark CLI/CUI bridge that routes natural-language Feishu messages to Codex with Obsidian vault access. |
 | `scripts/install_housekeeping_launchd.py` | Generate a macOS daily housekeeping LaunchAgent. |
 | `scripts/install_feishu_bot_agent_launchd.py` | Install the Feishu bot agent as a local macOS long-connection service. |
 | `skills-src/viaim-note-sync/scripts/import_viaim_exports.py` | Import exported VIAIM files into the vault inbox. |

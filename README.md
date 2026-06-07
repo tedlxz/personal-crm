@@ -136,6 +136,15 @@ python3 scripts/install_feishu_bot_agent_launchd.py --load
 
 If macOS blocks the service from reading `~/Documents`, grant Full Disk Access to the runtime or keep the agent running from Codex/Terminal.
 
+For Lark CLI/CUI natural-language questions that should search the Obsidian CRM first:
+
+```bash
+CODEX_WORKDIR="/Users/tedliu/Documents/Codex/2026-06-03/files-mentioned-by-the-user-june/outputs/Personal-CRM" \
+PERSONAL_CRM_VAULT="/Users/tedliu/Documents/Obsidian/Personal CRM" \
+LARK_CODEX_SANDBOX="workspace-write" \
+node scripts/lark_codex_bridge.mjs
+```
+
 ## Calendar Strategy
 
 The preferred calendar source is whichever Codex/Claude Code can actually read:

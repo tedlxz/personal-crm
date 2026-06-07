@@ -34,6 +34,24 @@ Feishu bot UI
   -> Obsidian vault + Codex/Claude + Feishu APIs
 ```
 
+For natural-language knowledge-base questions through Lark CLI/CUI, use:
+
+```bash
+CODEX_WORKDIR="/Users/tedliu/Documents/Codex/2026-06-03/files-mentioned-by-the-user-june/outputs/Personal-CRM" \
+PERSONAL_CRM_VAULT="/Users/tedliu/Documents/Obsidian/Personal CRM" \
+LARK_CODEX_SANDBOX="workspace-write" \
+LARK_CODEX_TIMEOUT_MS="300000" \
+node scripts/lark_codex_bridge.mjs
+```
+
+This bridge runs:
+
+```text
+codex exec -C <Personal CRM repo> --add-dir <Obsidian vault>
+```
+
+The prompt tells Codex to search the Obsidian vault first, then use web search only when the vault does not contain enough evidence. Without `--add-dir`, Codex may answer from the temporary CUI workspace and miss local CRM notes.
+
 ## Current Local Agent
 
 Preferred mode is Feishu long connection:
