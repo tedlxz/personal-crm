@@ -4,6 +4,14 @@ Personal CRM is a local-first meeting memory and relationship management system 
 
 It connects meeting transcripts from VIAIM / iFLYTEK, Feishu Minutes, and calendar context from Outlook/Gmail/Google Calendar/ICS, then writes structured contact files, meeting notes, company profiles, follow-ups, and insights into an Obsidian vault.
 
+## 先读这个：系统能做什么
+
+第一次了解这个项目，建议先读：
+
+[Personal CRM 系统概览](docs/system-overview.zh.md)
+
+里面有系统示意图、核心功能、日常使用方式和需要哪些授权。
+
 ## 中文快速安装
 
 ### 方式一：用 Git 安装
@@ -69,6 +77,7 @@ START_HERE_拖给Codex安装.md
 START_HERE_INSTALL_FOR_CODEX.md
 .env.example
 docs/
+  system-overview.zh.md
   execution-plan.md
   prd.md
   crm-housekeeping-agent.md
