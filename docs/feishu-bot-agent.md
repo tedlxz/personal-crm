@@ -44,6 +44,45 @@ LARK_CODEX_TIMEOUT_MS="300000" \
 node scripts/lark_codex_bridge.mjs
 ```
 
+For daily use, install the bridge as a local macOS service:
+
+```bash
+python3 scripts/install_lark_codex_bridge_launchd.py --load
+```
+
+This creates:
+
+```text
+~/Library/LaunchAgents/com.personalcrm.lark-codex-bridge.plist
+```
+
+The installer copies `scripts/lark_codex_bridge.mjs` to:
+
+```text
+~/.personalcrm/lark_codex_bridge.mjs
+```
+
+That keeps the long-running process outside `~/Documents`, while still giving Codex explicit access to:
+
+```text
+-C <Personal CRM repo> --add-dir <Obsidian vault>
+```
+
+Logs are written to:
+
+```text
+~/Library/Logs/PersonalCRM/lark_codex_bridge.launchd.err.log
+~/Library/Logs/PersonalCRM/lark_codex_bridge.launchd.out.log
+```
+
+Health checks:
+
+```bash
+lark-cli event status --json
+launchctl print gui/$(id -u)/com.personalcrm.lark-codex-bridge
+tail -n 100 ~/Library/Logs/PersonalCRM/lark_codex_bridge.launchd.err.log
+```
+
 This bridge runs:
 
 ```text
@@ -51,6 +90,8 @@ codex exec -C <Personal CRM repo> --add-dir <Obsidian vault>
 ```
 
 The prompt tells Codex to search the Obsidian vault first, then use web search only when the vault does not contain enough evidence. Without `--add-dir`, Codex may answer from the temporary CUI workspace and miss local CRM notes.
+
+If the bot does not reply `收到，Codex 正在处理...`, check the LaunchAgent and event bus first. A common failure mode is starting `lark-cli event consume` with `nohup` or closed stdin; the consumer treats stdin EOF as a graceful shutdown. The bridge avoids this by spawning the consumer with an open pipe and letting launchd keep the Node process alive.
 
 ## Current Local Agent
 

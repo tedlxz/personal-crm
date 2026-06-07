@@ -145,6 +145,14 @@ LARK_CODEX_SANDBOX="workspace-write" \
 node scripts/lark_codex_bridge.mjs
 ```
 
+For daily use, keep the Lark CLI/CUI bridge online as a macOS service:
+
+```bash
+python3 scripts/install_lark_codex_bridge_launchd.py --load
+```
+
+This service listens to Feishu messages, immediately replies `收到，Codex 正在处理...`, then runs Codex with access to both the Personal CRM repo and the Obsidian vault.
+
 ## Calendar Strategy
 
 The preferred calendar source is whichever Codex/Claude Code can actually read:

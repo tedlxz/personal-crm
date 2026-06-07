@@ -10,6 +10,7 @@ const rootDir = resolve(__dirname, "..");
 const config = {
   larkCli: process.env.LARK_CLI_BIN || "lark-cli",
   codexBin: process.env.CODEX_BIN || "codex",
+  bridgeCwd: resolve(process.env.LARK_CODEX_BRIDGE_CWD || rootDir),
   workdir: resolve(process.env.CODEX_WORKDIR || "/Users/tedliu/Documents/Codex/2026-06-03/files-mentioned-by-the-user-june/outputs/Personal-CRM"),
   vaultDir: resolve(process.env.PERSONAL_CRM_VAULT || "/Users/tedliu/Documents/Obsidian/Personal CRM"),
   sandbox: process.env.LARK_CODEX_SANDBOX || "workspace-write",
@@ -23,6 +24,8 @@ const config = {
 const seen = new Set();
 const queue = [];
 let busy = false;
+let shuttingDown = false;
+let consumer = null;
 
 function log(...args) {
   console.error(new Date().toISOString(), ...args);
@@ -61,7 +64,7 @@ function shouldHandle(event) {
 function runCommand(cmd, args, options = {}) {
   return new Promise((resolvePromise) => {
     const child = spawn(cmd, args, {
-      cwd: options.cwd || config.workdir,
+      cwd: options.cwd || config.bridgeCwd,
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -137,7 +140,7 @@ async function runCodex(prompt) {
     enrichedPrompt,
   ];
 
-  const result = await runCommand(config.codexBin, args, { cwd: config.workdir });
+  const result = await runCommand(config.codexBin, args, { cwd: config.bridgeCwd });
   if (result.ok) return result.stdout.trim() || "Codex 已完成，但没有返回文本。";
 
   const detail = (result.stderr || result.stdout || "").trim();
@@ -175,32 +178,34 @@ function pumpQueue() {
 }
 
 function start() {
+  mkdirSync(config.bridgeCwd, { recursive: true });
   mkdirSync(resolve(rootDir, "work"), { recursive: true });
 
   log("starting lark-codex bridge", {
     workdir: config.workdir,
     vaultDir: config.vaultDir,
+    bridgeCwd: config.bridgeCwd,
     sandbox: config.sandbox,
     trigger: config.trigger,
     commandTimeoutMs: config.commandTimeoutMs,
   });
 
-  const child = spawn(config.larkCli, [
+  consumer = spawn(config.larkCli, [
     "event",
     "consume",
     "im.message.receive_v1",
     "--as",
     config.eventAs,
   ], {
-    cwd: config.workdir,
+    cwd: config.bridgeCwd,
     env: process.env,
     stdio: ["pipe", "pipe", "pipe"],
   });
 
-  child.stdin.write("\n");
+  consumer.stdin.write("\n");
 
   let buffer = "";
-  child.stdout.on("data", (chunk) => {
+  consumer.stdout.on("data", (chunk) => {
     buffer += chunk.toString();
     let index;
     while ((index = buffer.indexOf("\n")) >= 0) {
@@ -217,25 +222,33 @@ function start() {
     }
   });
 
-  child.stderr.on("data", (chunk) => {
+  consumer.stderr.on("data", (chunk) => {
     for (const line of chunk.toString().split(/\r?\n/)) {
       if (line.trim()) log("[lark-cli]", line);
     }
   });
 
-  child.on("close", (code) => {
+  consumer.on("close", (code) => {
     log("event consumer exited", code);
-    process.exit(code || 0);
+    consumer = null;
+    if (shuttingDown) {
+      process.exit(code || 0);
+      return;
+    }
+    log("restarting event consumer in 5s");
+    setTimeout(start, 5000).unref();
   });
 
-  const shutdown = () => {
-    log("shutting down");
-    child.kill("SIGTERM");
-    setTimeout(() => process.exit(0), 1500).unref();
-  };
-
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
 }
+
+function shutdown() {
+  shuttingDown = true;
+  log("shutting down");
+  if (consumer) consumer.kill("SIGTERM");
+  setTimeout(() => process.exit(0), 1500).unref();
+}
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 
 start();
