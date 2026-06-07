@@ -7,7 +7,21 @@ from pathlib import Path
 
 
 DEFAULT_LABEL = "com.personalcrm.feishu-bot"
-DEFAULT_VAULT = "/Users/tedliu/Documents/Obsidian/Personal CRM"
+DEFAULT_VAULT = str(Path.home() / "Documents" / "Obsidian" / "Personal CRM")
+
+
+def load_env_file(repo):
+    env_path = repo / ".env"
+    values = {}
+    if not env_path.exists():
+        return values
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
 
 
 def main():
@@ -25,14 +39,18 @@ def main():
     log_dir = Path.home() / "Library" / "Logs" / "PersonalCRM"
     log_dir.mkdir(parents=True, exist_ok=True)
 
+    env_file = load_env_file(repo)
     env = {
         "PATH": os.environ.get("PATH", ""),
         "PERSONAL_CRM_VAULT": str(Path(args.vault).expanduser().resolve()),
     }
     for key in ("FEISHU_APP_ID", "FEISHU_APP_SECRET", "FEISHU_VERIFICATION_TOKEN", "FEISHU_ENCRYPT_KEY"):
-        value = os.environ.get(key, "")
+        value = os.environ.get(key, "") or env_file.get(key, "")
         if value:
             env[key] = value
+
+    if not env.get("FEISHU_APP_ID") or not env.get("FEISHU_APP_SECRET"):
+        raise SystemExit("Missing FEISHU_APP_ID or FEISHU_APP_SECRET. Fill .env first, then rerun.")
 
     plist = {
         "Label": args.label,

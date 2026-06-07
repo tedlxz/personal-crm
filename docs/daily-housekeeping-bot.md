@@ -122,7 +122,7 @@ Use `launchd` for a local machine:
 Run daily at 20:30 local time. The job should call Claude Code or Codex CLI with the vault path and this instruction:
 
 ```text
-Run crm-housekeeping-agent for /Users/tedliu/Documents/Obsidian/Personal CRM.
+Run crm-housekeeping-agent for ~/Documents/Obsidian/Personal CRM.
 Process today's Feishu and VIAIM transcripts.
 Do not update contacts on low confidence. Ask user via Feishu or pending-confirmations.md.
 ```
@@ -131,8 +131,8 @@ Generate the plist:
 
 ```bash
 python3 scripts/install_housekeeping_launchd.py \
-  --vault "/Users/tedliu/Documents/Obsidian/Personal CRM" \
-  --repo "/Users/tedliu/Documents/Codex/2026-06-03/files-mentioned-by-the-user-june/outputs/Personal-CRM" \
+  --vault "$HOME/Documents/Obsidian/Personal CRM" \
+  --repo "$(pwd)" \
   --time "20:30"
 ```
 
@@ -145,7 +145,7 @@ launchctl load ~/Library/LaunchAgents/com.personalcrm.housekeeping.plist
 For Codex Desktop, use a recurring automation instead of `launchd` when available. The automation prompt should be:
 
 ```text
-Run crm-housekeeping-agent for /Users/tedliu/Documents/Obsidian/Personal CRM.
+Run crm-housekeeping-agent for ~/Documents/Obsidian/Personal CRM.
 Process today's Feishu Minutes and VIAIM transcripts.
 Match calendar evidence when available.
 Use the detailed notes standard before writing CRM.

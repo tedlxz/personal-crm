@@ -71,7 +71,7 @@ Use the helper script for a first-pass candidate list:
 
 ```bash
 python3 scripts/contact_matcher.py \
-  --vault "/Users/tedliu/Documents/Obsidian/Personal CRM" \
+  --vault "$HOME/Documents/Obsidian/Personal CRM" \
   --title "2026-06-04 日本泰澳投资布局" \
   --transcript-file "/path/to/transcript.txt" \
   --participant "张三" \

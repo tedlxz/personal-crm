@@ -37,8 +37,8 @@ Feishu bot UI
 For natural-language knowledge-base questions through Lark CLI/CUI, use:
 
 ```bash
-CODEX_WORKDIR="/Users/tedliu/Documents/Codex/2026-06-03/files-mentioned-by-the-user-june/outputs/Personal-CRM" \
-PERSONAL_CRM_VAULT="/Users/tedliu/Documents/Obsidian/Personal CRM" \
+CODEX_WORKDIR="$(pwd)" \
+PERSONAL_CRM_VAULT="$HOME/Documents/Obsidian/Personal CRM" \
 LARK_CODEX_SANDBOX="workspace-write" \
 LARK_CODEX_TIMEOUT_MS="300000" \
 node scripts/lark_codex_bridge.mjs
@@ -100,7 +100,7 @@ Preferred mode is Feishu long connection:
 Run:
 
 ```bash
-PERSONAL_CRM_VAULT="/Users/tedliu/Documents/Obsidian/Personal CRM" \
+PERSONAL_CRM_VAULT="$HOME/Documents/Obsidian/Personal CRM" \
 FEISHU_APP_ID="<app_id>" \
 FEISHU_APP_SECRET="<app_secret>" \
 python3 scripts/feishu_bot_agent.py --transport websocket

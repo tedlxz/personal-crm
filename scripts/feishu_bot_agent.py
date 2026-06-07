@@ -13,7 +13,7 @@ from urllib.request import Request, urlopen
 
 
 FEISHU_BASE = "https://open.feishu.cn/open-apis"
-DEFAULT_VAULT = "/Users/tedliu/Documents/Obsidian/Personal CRM"
+DEFAULT_VAULT = str(Path.home() / "Documents" / "Obsidian" / "Personal CRM")
 HELP_TEXT = (
     "我可以直接理解自然语言，也保留这些命令：\n"
     "/pending 查看待确认归档\n"

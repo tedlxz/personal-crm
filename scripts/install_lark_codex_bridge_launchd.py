@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 DEFAULT_LABEL = "com.personalcrm.lark-codex-bridge"
-DEFAULT_VAULT = "/Users/tedliu/Documents/Obsidian/Personal CRM"
+DEFAULT_VAULT = str(Path.home() / "Documents" / "Obsidian" / "Personal CRM")
 
 
 def find_binary(name, fallback):

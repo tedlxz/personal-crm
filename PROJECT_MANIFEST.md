@@ -16,6 +16,15 @@ Package a reusable automation system for personal CRM and recording management:
 - Ask low-confidence archive questions through Feishu bot.
 - Search and answer from the local Obsidian knowledge base through a bot backend.
 
+## First-Run Entry Points
+
+| File | Purpose |
+| --- | --- |
+| `START_HERE_拖给Codex安装.md` | Drag this file into Codex to let Codex guide a Chinese first-time install. |
+| `START_HERE_INSTALL_FOR_CODEX.md` | ASCII-name fallback for zip tools that garble Chinese filenames. |
+| `.env.example` | Safe local config template. Copy to `.env` or use the installer. |
+| `scripts/personal_crm_install_wizard.py` | Interactive Chinese installer for vault setup, Feishu credentials, and optional macOS services. |
+
 ## Installable Skills
 
 | Skill Package | Purpose |
@@ -37,6 +46,7 @@ Package a reusable automation system for personal CRM and recording management:
 | `scripts/contact_matcher.py` | Score contact candidates for conservative CRM archiving. |
 | `scripts/feishu_bot_agent.py` | Local Feishu event backend for confirmation commands and knowledge-base search. |
 | `scripts/lark_codex_bridge.mjs` | Lark CLI/CUI bridge that routes natural-language Feishu messages to Codex with Obsidian vault access. |
+| `scripts/personal_crm_install_wizard.py` | Chinese first-run installer that writes `.env`, initializes the vault, and can install services. |
 | `scripts/install_housekeeping_launchd.py` | Generate a macOS daily housekeeping LaunchAgent. |
 | `scripts/install_feishu_bot_agent_launchd.py` | Install the Feishu bot agent as a local macOS long-connection service. |
 | `scripts/install_lark_codex_bridge_launchd.py` | Install the Lark CLI/CUI to Codex bridge as a local macOS service. |

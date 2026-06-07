@@ -4,9 +4,70 @@ Personal CRM is a local-first meeting memory and relationship management system 
 
 It connects meeting transcripts from VIAIM / iFLYTEK, Feishu Minutes, and calendar context from Outlook/Gmail/Google Calendar/ICS, then writes structured contact files, meeting notes, company profiles, follow-ups, and insights into an Obsidian vault.
 
+## 中文快速安装
+
+### 方式一：用 Git 安装
+
+```bash
+git clone https://github.com/tedlxz/personal-crm.git
+cd personal-crm
+python3 scripts/personal_crm_install_wizard.py
+```
+
+安装向导会用中文提示你填写 Obsidian vault 路径、飞书 App ID / App Secret，并把本地配置写入 `.env`。
+
+### 方式二：用压缩包安装
+
+1. 解压 `Personal-CRM-deliverable.zip`。
+2. 把根目录里的 [START_HERE_拖给Codex安装.md](START_HERE_拖给Codex安装.md) 拖给 Codex。
+3. 如果中文文件名在解压后显示异常，改用 [START_HERE_INSTALL_FOR_CODEX.md](START_HERE_INSTALL_FOR_CODEX.md)。
+4. 让 Codex 按文件里的步骤执行安装。
+
+### 默认安装位置
+
+如果你不指定路径，系统会使用：
+
+```text
+~/Documents/Obsidian/Personal CRM
+```
+
+安装成功后，用 Obsidian 打开这个文件夹即可。
+
+## 飞书配置需要用户自己准备什么
+
+每个用户都需要在自己的飞书开放平台应用里获取自己的凭证。不要复用别人的 App ID 或 App Secret。
+
+在 [飞书开放平台](https://open.feishu.cn/) 创建或打开「企业自建应用」后：
+
+1. 「凭证与基础信息」里复制 `App ID` 和 `App Secret`。
+2. 「安全设置」里添加 OAuth 重定向 URL：
+
+```text
+http://localhost:9876/callback
+```
+
+3. 「事件与回调」里选择长连接接收事件和回调。
+4. 「权限管理」里至少开通并发布：
+
+```text
+im:message:send_as_bot
+im:message
+minutes:minutes.search:read
+minutes:minutes:readonly
+minutes:minutes.transcript:export
+calendar:calendar:readonly
+contact:user.base:readonly
+offline_access
+```
+
+安装向导会把这些值写入本地 `.env`。`.env` 已经被 `.gitignore` 排除，不应提交。
+
 ## What This Package Contains
 
 ```text
+START_HERE_拖给Codex安装.md
+START_HERE_INSTALL_FOR_CODEX.md
+.env.example
 docs/
   execution-plan.md
   prd.md
@@ -20,6 +81,8 @@ scripts/
   contact_matcher.py
   feishu_bot_agent.py
   install_housekeeping_launchd.py
+  install_lark_codex_bridge_launchd.py
+  personal_crm_install_wizard.py
   setup_personal_crm_vault.py
 skills/
   contact-builder.skill
@@ -41,7 +104,7 @@ skills-src/
   wechat-contact-reader/
 ```
 
-## Quick Start
+## Manual Quick Start
 
 1. Install Obsidian.
 2. Install Claude Code or use Codex with Chrome plugin access.
@@ -113,8 +176,8 @@ For a local daily schedule:
 
 ```bash
 python3 scripts/install_housekeeping_launchd.py \
-  --vault "/Users/tedliu/Documents/Obsidian/Personal CRM" \
-  --repo "/Users/tedliu/Documents/Codex/2026-06-03/files-mentioned-by-the-user-june/outputs/Personal-CRM" \
+  --vault "$HOME/Documents/Obsidian/Personal CRM" \
+  --repo "$(pwd)" \
   --time "20:30"
 ```
 
@@ -139,8 +202,8 @@ If macOS blocks the service from reading `~/Documents`, grant Full Disk Access t
 For Lark CLI/CUI natural-language questions that should search the Obsidian CRM first:
 
 ```bash
-CODEX_WORKDIR="/Users/tedliu/Documents/Codex/2026-06-03/files-mentioned-by-the-user-june/outputs/Personal-CRM" \
-PERSONAL_CRM_VAULT="/Users/tedliu/Documents/Obsidian/Personal CRM" \
+CODEX_WORKDIR="$(pwd)" \
+PERSONAL_CRM_VAULT="$HOME/Documents/Obsidian/Personal CRM" \
 LARK_CODEX_SANDBOX="workspace-write" \
 node scripts/lark_codex_bridge.mjs
 ```

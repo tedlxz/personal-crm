@@ -16,7 +16,7 @@ Append an audit entry to .crm-system/run-log.md.
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--vault", required=True)
+    parser.add_argument("--vault", default=str(Path.home() / "Documents" / "Obsidian" / "Personal CRM"))
     parser.add_argument("--repo", default=str(Path(__file__).resolve().parents[1]))
     parser.add_argument("--time", default="20:30")
     parser.add_argument("--label", default="com.personalcrm.housekeeping")
@@ -34,9 +34,13 @@ def main():
         "ProgramArguments": [
             args.codex_command,
             "exec",
-            "--cwd",
+            "--skip-git-repo-check",
+            "--sandbox",
+            "workspace-write",
+            "-C",
             str(Path(args.repo).resolve()),
-            "--",
+            "--add-dir",
+            str(Path(args.vault).expanduser().resolve()),
             f"{DEFAULT_PROMPT}\nVault path: {Path(args.vault).expanduser().resolve()}",
         ],
         "StartCalendarInterval": {
